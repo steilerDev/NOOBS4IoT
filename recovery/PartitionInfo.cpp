@@ -1,7 +1,7 @@
 #include <QProcess>
 #include <QDir>
 #include "PartitionInfo.h"
-#include "easylogging++.h"
+#include "libs/easylogging++.h"
 
 /*
  * Keys of partition info map

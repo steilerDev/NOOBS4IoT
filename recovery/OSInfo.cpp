@@ -7,7 +7,7 @@
 #include <QtNetwork/QNetworkDiskCache>
 #include <QProcess>
 #include "OSInfo.h"
-#include "easylogging++.h"
+#include "libs/easylogging++.h"
 #include "Utility.h"
 
 OSInfo::OSInfo(const QVariantMap &os) : _valid(true), _supported(false)

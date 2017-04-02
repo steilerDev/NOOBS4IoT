@@ -1,5 +1,5 @@
 #include "MultiImageWrite.h"
-#include "easylogging++.h"
+#include "libs/easylogging++.h"
 #include "BootManager.h"
 #include "Utility.h"
 #include <QDir>
@@ -7,7 +7,6 @@
 #include <QProcess>
 #include <QSettings>
 #include <QTime>
-#include <unistd.h>
 
 MultiImageWrite::MultiImageWrite(const QList<OSInfo*> &oses) : _extraSpacePerPartition(0),
                                                                _part(5),

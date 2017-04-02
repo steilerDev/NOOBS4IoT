@@ -10,7 +10,7 @@
 
 #include <QString>
 #include <QVariant>
-#include "easylogging++.h"
+#include "libs/easylogging++.h"
 
 /* Location to download the list of available distributions from
  * Multiple lists can be specified by space separating the URLs */
@@ -30,7 +30,7 @@
 #define SETTINGS_PARTITION_SIZE  (32 * 2048 - PARTITION_GAP)
 
 // This file contains the partition device that the system will automatically boot into
-#define DEFAULT_BOOT_PARTITION_FILE "/settings/default_boot_partition.txt"
+#define DEFAULT_BOOT_PARTITION_FILE "/settings/default_boot_partition"
 
 /* RiscOS magic */
 #define RISCOS_OFFSET (1760)

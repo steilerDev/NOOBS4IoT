@@ -11,12 +11,18 @@
 #include <QVariant>
 #include "PartitionInfo.h"
 #include "OSInfo.h"
+#include "libs/web++.h"
+
+#define PORT 80
 
 class BootManager: public QObject {
     Q_OBJECT
 
 public:
     BootManager();
+
+    static void installOS(WPP::Request* req, WPP::Response* res);
+    static void setDefaultBootPartition(WPP::Request* req, WPP::Response* res);
 
     /*
      * The following function save the default partition's number to
@@ -37,6 +43,8 @@ private:
     bool bootCheck();
     bool hasInstalledOS();
     QVariantList getInstalledOS();
+    // Should the webserver be started
+    bool webserver;
 
 signals:
     void finished();

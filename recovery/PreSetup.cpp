@@ -9,7 +9,7 @@
 
 #include "PreSetup.h"
 
-#include "easylogging++.h"
+#include "libs/easylogging++.h"
 #include "BootManager.h"
 #include <QProcess>
 #include <QFile>
@@ -20,8 +20,6 @@
 #include <sys/ioctl.h>
 #include <QtNetwork/QNetworkInterface>
 #include <QCoreApplication>
-
-
 
 // This function checks if the SD Card is properly formatted, if this is not the case it will be formatted.
 bool PreSetup::checkAndPrepareSDCard() {
@@ -277,29 +275,6 @@ bool PreSetup::writeRiscOSblob() {
 
 void PreSetup::startNetworking() {
     LINFO << "Starting network";
-
-    Utility::Sys::mountPartition(SETTINGS_PARTITION, SETTINGS_DIR);
-    QFile f("/settings/wpa_supplicant.conf");
-
-    if ( f.exists() && f.size() == 0 ) {
-        LWARNING << "Removing corrupt wpa_supplicant.conf file";
-        /* Remove corrupt file */
-        f.remove();
-    }
-
-    if ( !f.exists() ) {
-        LDEBUG << "Loading wpa_supplicant.conf file";
-        /* If user supplied a wpa_supplicant.conf on the FAT partition copy that one to settings
-           otherwise copy the default one stored in the initramfs */
-        if (QFile::exists("/mnt/wpa_supplicant.conf"))
-            QFile::copy("/mnt/wpa_supplicant.conf", "/settings/wpa_supplicant.conf");
-        else
-        {
-            LDEBUG << "Copying /etc/wpa_supplicant.conf to /settings/wpa_supplicant.conf";
-            QFile::copy("/etc/wpa_supplicant.conf", "/settings/wpa_supplicant.conf");
-        }
-    }
-    QFile::remove("/etc/wpa_supplicant.conf");
 
     /* Enable dbus so that we can use it to talk to wpa_supplicant later */
     LDEBUG << "Starting dbus";

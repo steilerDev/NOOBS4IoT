@@ -10,8 +10,7 @@
 #include <QSettings>
 #include <sys/reboot.h>
 #include "BootManager.h"
-#include "easylogging++.h"
-#include <unistd.h>
+#include "libs/easylogging++.h"
 #include <QCoreApplication>
 #include <QApplication>
 #include <QTime>
@@ -20,7 +19,8 @@
 #include "PreSetup.h"
 #include "InstallManager.h"
 
-BootManager::BootManager(): QObject() {}
+BootManager::BootManager(): QObject(), webserver(true) {}
+
 
 void BootManager::run() {
 
@@ -43,49 +43,55 @@ void BootManager::run() {
         }
         preSetup.startNetworking();
 
-        LINFO << "Setup complete...Entering menu";
-        int selection;
-        bool stayInMenu = true;
-        while (stayInMenu) {
-            std::cout << "You have the following options to choose from:" << std::endl;
-            std::cout << "  1) Reboot to default partition" << std::endl;
-            std::cout << "  2) Reboot into specific partition" << std::endl;
-            std::cout << "  3) Set default partition" << std::endl;
-            std::cout << "  4) Install Raspbian" << std::endl;
-            std::cout << "  5) Exit to recovery shell" << std::endl << std::endl;
-            std::cout << "Enter a number: ";
-            std::cin >> selection;
-            switch (selection) {
-                case 1:
-                    bootIntoPartition();
-                    break;
-                case 2: {
-                    std::cout << "Please give the partition device /dev/mmcblk0pX" << std::endl;
-                    QTextStream qtin(stdin);
-                    QString line = qtin.readLine();
-                    bootIntoPartition(line);
-                    break;
+        std::cout << "Recovery mode started!" << std::endl << std::endl;
+        if(webserver) {
+            LINFO << "Creating and starting webserver...";
+            // Todo: Insert webserver stuff here
+        } else {
+            LINFO << "'no-webserver' argument found, starting local-mode...";
+            int selection;
+            bool stayInMenu = true;
+            while (stayInMenu) {
+                std::cout << "You have the following options to choose from:" << std::endl;
+                std::cout << "  1) Reboot to default partition" << std::endl;
+                std::cout << "  2) Reboot into specific partition" << std::endl;
+                std::cout << "  3) Set default partition" << std::endl;
+                std::cout << "  4) Install Raspbian" << std::endl;
+                std::cout << "  5) Exit to recovery shell" << std::endl << std::endl;
+                std::cout << "Enter a number: ";
+                std::cin >> selection;
+                switch (selection) {
+                    case 1:
+                        bootIntoPartition();
+                        break;
+                    case 2: {
+                        std::cout << "Please give the partition device /dev/mmcblk0pX" << std::endl;
+                        QTextStream qtin(stdin);
+                        QString line = qtin.readLine();
+                        bootIntoPartition(line);
+                        break;
+                    }
+                    case 3: {
+                        std::cout << "Please give the partition device /dev/mmcblk0pX" << std::endl;
+                        QTextStream qtin(stdin);
+                        QString line = qtin.readLine();
+                        setDefaultBootPartition(line);
+                        break;
+                    }
+                    case 4: {
+                        InstallManager *installManager = new InstallManager();
+                        installManager->installOS(*Utility::Debug::getRaspbianJSON());
+                        break;
+                    }
+                    case 5:
+                        stayInMenu = false;
+                        break;
+                    default:
+                        break;
                 }
-                case 3: {
-                    std::cout << "Please give the partition device /dev/mmcblk0pX" << std::endl;
-                    QTextStream qtin(stdin);
-                    QString line = qtin.readLine();
-                    setDefaultBootPartition(line);
-                    break;
-                }
-                case 4: {
-                    InstallManager *installManager = new InstallManager();
-                    installManager->installOS(*Utility::Debug::getRaspbianJSON());
-                    break;
-                }
-                case 5:
-                    stayInMenu = false;
-                    break;
-                default:
-                    break;
             }
-        }
 
+        }
     }
     emit finished();
 }
@@ -96,6 +102,7 @@ bool BootManager::bootCheck() {
 
     QStringList args = QCoreApplication::arguments();
 
+    bool runinstaller = false;
     // Process command-line arguments
     for (int i = 0; i < args.size(); i++) {
         LDEBUG << "Found argument: " << args[i].toUtf8().constData();
@@ -104,14 +111,21 @@ bool BootManager::bootCheck() {
         if (args[i].compare("-runinstaller", Qt::CaseInsensitive) == 0) {
             //If runinstaller is specified, start installation right away
             LDEBUG << "Runinstaller specified, entering setup mode";
-            return false;
+            runinstaller = true;
         } else if (args[i].compare("-partition", Qt::CaseInsensitive) == 0) {
             if (args.size() > i + 1) {
                 QString defaultPartition = args[i + 1];
                 LINFO << " Found default partition in args: " << defaultPartition.toUtf8().constData();
                 setDefaultBootPartition(defaultPartition);
             }
+        } else if (args[i].compare("-no-webserver", Qt::CaseInsensitive) == 0) {
+            LDEBUG << "Found no-webserver, setting flag to start local-mode";
+            webserver = false;
         }
+    }
+
+    if(runinstaller) {
+        return false;
     }
 
     if (!hasInstalledOS()) {

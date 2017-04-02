@@ -1,7 +1,7 @@
 #include <iostream>
 #include <QCoreApplication>
 #include <QTimer>
-#include "easylogging++.h"
+#include "libs/easylogging++.h"
 #include "BootManager.h"
 
 _INITIALIZE_EASYLOGGINGPP
