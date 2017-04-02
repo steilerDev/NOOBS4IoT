@@ -11,7 +11,7 @@
 #include <QVariant>
 #include "PartitionInfo.h"
 #include "OSInfo.h"
-#include "libs/web++.h"
+#include "libs/WebServer.h"
 
 #define PORT 80
 
@@ -21,15 +21,15 @@ class BootManager: public QObject {
 public:
     BootManager();
 
-    static void installOS(WPP::Request* req, WPP::Response* res);
-    static void setDefaultBootPartition(WPP::Request* req, WPP::Response* res);
+    static void installOSREST(Request* request, Response* response);
+    static void setDefaultBootPartitionREST(Request* request, Response* response);
 
     /*
      * The following function save the default partition's number to
      */
-    static void setDefaultBootPartition(OSInfo &osInfo);
-    static void setDefaultBootPartition(PartitionInfo &partition);
-    static void setDefaultBootPartition(const QString &partitionDevice);
+    static bool setDefaultBootPartition(OSInfo &osInfo);
+    static bool setDefaultBootPartition(PartitionInfo &partition);
+    static bool setDefaultBootPartition(const QString &partitionDevice);
     /*
      * This function actually boots into the default partition, if no argument is given. If an argument is given, this will NOT become the default partition!
      */

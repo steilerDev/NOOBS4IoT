@@ -47,6 +47,8 @@ namespace Utility {
         QVariant parse(const QByteArray &json);
         QVariant loadFromFile(const QString &filename);
         bool saveToFile(const QString &filename, const QVariant &json);
+        void printJson(QMap<QString, QVariant> &json);
+        void printJsonArray(QList<QVariant> &json);
     }
 
     namespace Sys {

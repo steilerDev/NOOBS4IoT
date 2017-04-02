@@ -70,3 +70,48 @@ bool Utility::Json::saveToFile(const QString &filename, const QVariant &json) {
     }
 }
 
+void Utility::Json::printJson(QMap<QString, QVariant> &json) {
+    LDEBUG << "{";
+            foreach(QString key, json.keys()) {
+            // We have a simple key:value
+            if(json[key].canConvert<QString>()) {
+                LDEBUG << key.toUtf8().constData() << ": " << json[key].toString().toUtf8().constData();
+
+                // We have key: [ ... ]
+            } else if (json[key].canConvert<QList<QVariant> >()) {
+                LDEBUG << key.toUtf8().constData() << ":";
+                QList<QVariant> embeddedArray = json[key].toList();
+                printJsonArray(embeddedArray);
+                // We have key : { ... }
+            } else if (json[key].canConvert<QMap<QString, QVariant> >()) {
+                LDEBUG << key.toUtf8().constData() << ":";
+                QMap<QString, QVariant> embeddedJson = json[key].toMap();
+                printJson(embeddedJson);
+            } else {
+                LERROR << "Unable to parse part of this";
+            }
+        }
+    LDEBUG << "}";
+}
+
+void Utility::Json::printJsonArray(QList<QVariant> &json) {
+    LDEBUG << "[";
+            foreach(QVariant listItem, json) {
+            // We have a string
+            if(listItem.canConvert<QString>()) {
+                LDEBUG << listItem.toString().toUtf8().constData();
+                // We have an embedded JSON
+            } else if(listItem.canConvert<QMap<QString, QVariant> >()) {
+                QMap<QString, QVariant> embeddedJson = listItem.toMap();
+                printJson(embeddedJson);
+                // We have an embedded array
+            } else if (listItem.canConvert<QList<QVariant> >()) {
+                QList<QVariant> embeddedArray = listItem.toList();
+                printJsonArray(embeddedArray);
+            } else {
+                LERROR << "Unable to parse part of this";
+            }
+        }
+    LDEBUG << "]";
+}
+

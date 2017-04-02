@@ -12,8 +12,8 @@ TARGET = recovery
 TEMPLATE = app
 LIBS += -lqjson
 
-SOURCES += main.cpp\
-    libs\web++.cpp \
+SOURCES += main.cpp \
+    libs/WebServer.cpp \
     Utility_Json.cpp \
     Utility_Sys.cpp \
     Utility_Debug.cpp \
@@ -25,7 +25,7 @@ SOURCES += main.cpp\
     InstallManager.cpp
 
 HEADERS  += \
-    libs/web++.h \
+    libs/WebServer.h \
     libs/easylogging++.h \
     Utility.h \
     MultiImageWrite.h \

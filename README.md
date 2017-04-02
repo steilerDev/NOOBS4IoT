@@ -27,6 +27,19 @@ This project uses [EasyLogging++ (v8.91) by Majid Khan (c) 2017 muflihun.com](ht
 4. Copy the extracted files onto the SD card that you just formatted so that this file is at the root directory of the SD card. Please note that in some cases it may extract the files into a folder, if this is the case then please copy across the files from inside the folder rather than the folder itself.
 5. Insert the SD card into your Pi and connect the power supply.
 
+# Rebuild NOOBS4IoT
+Note that this will require a minimum of 6GB free disk space.
+
+Build debendencies on Ubuntu:
+`sudo apt-get install build-essential rsync texinfo libncurses-dev whois unzip bc qt4-linguist-tools`
+
+Run Build Script
+`./BUILDME.sh`
+
+Buildroot will then build the software and all dependencies, putting the result in the output directory. Buildroot by default compiles multiple files in parallel, depending on the number of CPU cores you have. The files in the `output` directory need to be put onto the SDCard (as described [above with all prerequisits](#Installation)).
+
+If your build machine has some QT5 components, it is useful to export `QT_SELECT=4` before building to ensure the QT4 component versions are selected.
+
 # Usage
 
 ## Initial boot

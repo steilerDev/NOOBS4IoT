@@ -21,6 +21,26 @@
 
 BootManager::BootManager(): QObject(), webserver(true) {}
 
+void BootManager::setDefaultBootPartitionREST(Request *request, Response *response) {
+    LINFO << "Got request to set default boot partition to "  << request->body;
+    if(BootManager::setDefaultBootPartition(QString(request->body.c_str()))) {
+        LINFO << "Successfully set default partition to " << request->body;
+        response->phrase = "OK";
+        response->code = 200;
+        response->type = "text/plain";
+        response->body = "Successfully set default partition to " + request->body + "\n";
+    } else {
+        LERROR << "Unable to set default partition to " << request->body;
+        response->phrase = "Bad Request";
+        response->code = 400;
+        response->type = "text/plain";
+        response->body = "Unable to set default partition to " + request->body + ", partition does not exist\n";
+    }
+}
+
+void BootManager::installOSREST(Request *request, Response *response) {
+
+}
 
 void BootManager::run() {
 
@@ -45,8 +65,18 @@ void BootManager::run() {
 
         std::cout << "Recovery mode started!" << std::endl << std::endl;
         if(webserver) {
-            LINFO << "Creating and starting webserver...";
-            // Todo: Insert webserver stuff here
+            LINFO << "Creating web server...";
+            Server server;
+            server.post("/os", &BootManager::installOSREST);
+            server.post("/bootPartition", &BootManager::setDefaultBootPartitionREST);
+
+            LINFO << "Starting server...";
+
+            std::string ip = Server::getIP();
+            std::cout << "REST API listening on " << ip << ":" << PORT << std::endl;
+            std::cout << "POST JSON object with OS information to '" << ip << ":" << PORT << "/os' in order to install the os (request will timeout, since response will be send after install is finished!)" << std::endl;
+            std::cout << "POST partition device string to '" << ip << ":" << PORT << "/bootPartition' in order to set it as default boot partition" << std::endl;
+            server.start(PORT);
         } else {
             LINFO << "'no-webserver' argument found, starting local-mode...";
             int selection;
@@ -154,31 +184,31 @@ QVariantList BootManager::getInstalledOS() {
     }
 }
 
-void BootManager::setDefaultBootPartition(OSInfo &osInfo) {
+bool BootManager::setDefaultBootPartition(OSInfo &osInfo) {
     LDEBUG << "Setting " << osInfo.name().toUtf8().constData() << " as default os";
     if(osInfo.partitions()->isEmpty()) {
         LFATAL << "Unable to set OS as boot partition, because there are no partition information available!";
-        return;
+        return false;
     } else {
-        BootManager::setDefaultBootPartition(*osInfo.partitions()->first());
+        return BootManager::setDefaultBootPartition(*osInfo.partitions()->first());
     }
 }
 
-void BootManager::setDefaultBootPartition(PartitionInfo &partition) {
+bool BootManager::setDefaultBootPartition(PartitionInfo &partition) {
     QString partDevice = QString(partition.partitionDevice());
     if(partDevice.isEmpty()) {
         LFATAL << "Unable to set partition as boot partition, because there is no partition device available!";
-        return;
+        return false;
     } else {
-        BootManager::setDefaultBootPartition(partDevice);
+        return BootManager::setDefaultBootPartition(partDevice);
     }
 }
 
-void BootManager::setDefaultBootPartition(const QString &partitionDevice) {
+bool BootManager::setDefaultBootPartition(const QString &partitionDevice) {
     LINFO << "Setting boot partition to " << partitionDevice.toUtf8().constData();
     if(!partitionDevice.startsWith("/dev/mmcblk0p")) {
         LFATAL << "Unable to set boot partition to " << partitionDevice.toUtf8().constData() << " because it does not look like a SD Card partition device";
-        return;
+        return false;
     }
 
     QFile f(DEFAULT_BOOT_PARTITION_FILE);
@@ -188,7 +218,9 @@ void BootManager::setDefaultBootPartition(const QString &partitionDevice) {
     }
     if(!Utility::Sys::putFileContents(DEFAULT_BOOT_PARTITION_FILE, partitionDevice.toAscii())) {
         LERROR << "Unable to set default boot partition";
+        return false;
     }
+    return true;
 }
 
 void BootManager::bootIntoPartition(const QString &partitionDevice) {
