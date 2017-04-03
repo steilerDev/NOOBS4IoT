@@ -20,8 +20,10 @@ class InstallManager {
 public:
     InstallManager();
     ~InstallManager();
-    bool installOS(OSInfo *os);
-    bool installOS(QList<OSInfo*> &oses);
+    void installOS(const QVariantList &oses);
+
+private:
+    QList<OSInfo*> *_osList;
 };
 
 

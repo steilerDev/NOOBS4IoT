@@ -10,33 +10,7 @@
 #include "libs/easylogging++.h"
 #include "Utility.h"
 
-/*
- * OS should have the layout as obtained by http://downloads.raspberrypi.org/os_list_v3.json (Plus-sign indicates a mandatory entry)
- * A list of the following entries is expected.
- *      {
- *          "description": "LibreELEC is a fast and user-friendly Kodi Entertainment Center distribution.",
- *          "icon": "http://releases.libreelec.tv/noobs/LibreELEC_RPi/LibreELEC_RPi.png",
- *          "marketing_info": "http://releases.libreelec.tv/noobs/LibreELEC_RPi/marketing.tar",
- *          "nominal_size": 1024,
- *    +     "os_info": "http://releases.libreelec.tv/noobs/LibreELEC_RPi/os.json",
- *    +     "os_name": "LibreELEC_RPi",
- *          "partition_setup": "http://releases.libreelec.tv/noobs/LibreELEC_RPi/partition_setup.sh",
- *    +     "partitions_info": "http://releases.libreelec.tv/noobs/LibreELEC_RPi/partitions.json",
- *          "release_date": "2016-05-17",
- *          "supported_hex_revisions": "2,3,4,5,6,7,8,9,d,e,f,10,11,12,14,19,0092",
- *          "supported_models": [
- *              "Pi Model",
- *              "Pi Compute Module",
- *              "Pi Zero"
- *          ],
- *    +     "tarballs": [
- *    +         "http://releases.libreelec.tv/noobs/LibreELEC_RPi/LibreELEC_RPi_System.tar.xz",
- *    +         "http://releases.libreelec.tv/noobs/LibreELEC_RPi/LibreELEC_RPi_Storage.tar.xz"
- *          ]
- *      },
- */
-
-OSInfo::OSInfo(const QMap<QString, QVariant> &os) : _valid(true), _supported(false)
+OSInfo::OSInfo(const QVariantMap &os) : _valid(true), _supported(false)
 {
     LDEBUG << "Creating OS object from JSON";
 
@@ -188,7 +162,7 @@ OSInfo::~OSInfo() {
 
 void OSInfo::parseOSInfo(const QString &url) {
     LDEBUG << "Processing OS info";
-    QMap<QString, QVariant> osInfo = Utility::Json::parseJson(downloadRessource(url));
+    QVariantMap osInfo = Utility::Json::parse(downloadRessource(url)).toMap();
 
     /*
      * Values that might already have been set previously
@@ -256,8 +230,7 @@ void OSInfo::parseOSInfo(const QString &url) {
 
 void OSInfo::parsePartitionInfo(const QString &url) {
     LINFO << "Processing partition info";
-    QMap<QString, QVariant> partitionInfo = Utility::Json::parseJson(downloadRessource(url));
-
+    QVariantMap partitionInfo = Utility::Json::parse(downloadRessource(url)).toMap();
     if(partitionInfo.contains(OS_PARTITIONS)) {
         int i = 0;
         if(partitionInfo.value(OS_PARTITIONS).toList().size() != _tarballs.size()) {
