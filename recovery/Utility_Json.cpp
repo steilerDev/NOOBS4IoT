@@ -10,18 +10,23 @@
 #include <QDebug>
 #include <QFile>
 
-QVariant Utility::Json::parse(const QByteArray &json) {
-    LDEBUG << "Parsing JSON: " << json.constData();
+QMap<QString, QVariant> Utility::Json::parseJson(const QString &jsonString) {
+    return Utility::Json::parseJson(jsonString.toUtf8());
+};
+
+QMap<QString, QVariant> Utility::Json::parseJson(const QByteArray &jsonArray) {
+    LDEBUG << "Parsing JSON: " << jsonArray.constData();
     QJson::Parser parser;
     bool ok;
-    QVariant result = parser.parse(json, &ok);
-
-    if (!ok) {
-        LFATAL << "Error parsing json";
-        result.clear();
+    QMap<QString, QVariant> json = parser.parse(jsonArray, &ok).toMap();
+    if(!ok) {
+        LERROR << "Unable to parse JSON";
+        json.clear();
+    } else {
+        LDEBUG << "Succesfully parsed JSON";
     }
 
-    return result;
+    return json;
 }
 
 QVariant Utility::Json::loadFromFile(const QString &filename) {

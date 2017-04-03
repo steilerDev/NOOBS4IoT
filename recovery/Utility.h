@@ -44,7 +44,9 @@
 
 namespace Utility {
     namespace Json {
-        QVariant parse(const QByteArray &json);
+        QMap<QString, QVariant> parseJson(const QString &jsonString);
+        QMap<QString, QVariant> parseJson(const QByteArray &json);
+
         QVariant loadFromFile(const QString &filename);
         bool saveToFile(const QString &filename, const QVariant &json);
         void printJson(QMap<QString, QVariant> &json);
@@ -65,7 +67,7 @@ namespace Utility {
     }
 
     namespace Debug {
-        QVariantList* getRaspbianJSON();
+        QMap<QString, QVariant>* getRaspbianJSON();
     }
 }
 

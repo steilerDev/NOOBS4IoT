@@ -39,7 +39,38 @@ void BootManager::setDefaultBootPartitionREST(Request *request, Response *respon
 }
 
 void BootManager::installOSREST(Request *request, Response *response) {
-
+    QMap<QString, QVariant> osInfoJson = Utility::Json::parseJson(QString(request->body.c_str()));
+    if(osInfoJson.size() <= 0) {
+        LERROR << "Unable to parse Json!";
+        response->phrase = "Bad Request";
+        response->code = 400;
+        response->type = "text/plain";
+        response->body = "Unable to install OS\n";
+    } else {
+        InstallManager *installManager = new InstallManager();
+        OSInfo osInfo(osInfoJson);
+        if(!osInfo.isValid()) {
+            LERROR << "Provided OS info is not valid!";
+            response->phrase = "Bad Request";
+            response->code = 400;
+            response->type = "text/plain";
+            response->body = "Provided OS info is invalid\n";
+        } else {
+            if(!installManager->installOS(&osInfo)) {
+                LERROR << "Unable to install OS";
+                response->phrase = "Internal Server Error";
+                response->code = 500;
+                response->type = "text/plain";
+                response->body = "Unable to install OS\n";
+            } else {
+                LINFO << "Successfully installed OS";
+                response->phrase = "OK";
+                response->code = 200;
+                response->type = "text/plain";
+                response->body = "Successfully installed OS\n";
+            }
+        }
+    }
 }
 
 void BootManager::run() {
@@ -72,7 +103,7 @@ void BootManager::run() {
 
             LINFO << "Starting server...";
 
-            std::string ip = Server::getIP();
+            const char* ip = Server::getIP().toUtf8().constData();
             std::cout << "REST API listening on " << ip << ":" << PORT << std::endl;
             std::cout << "POST JSON object with OS information to '" << ip << ":" << PORT << "/os' in order to install the os (request will timeout, since response will be send after install is finished!)" << std::endl;
             std::cout << "POST partition device string to '" << ip << ":" << PORT << "/bootPartition' in order to set it as default boot partition" << std::endl;
@@ -110,7 +141,13 @@ void BootManager::run() {
                     }
                     case 4: {
                         InstallManager *installManager = new InstallManager();
-                        installManager->installOS(*Utility::Debug::getRaspbianJSON());
+                        OSInfo raspbianInfo(*Utility::Debug::getRaspbianJSON());
+                        if(!raspbianInfo.isValid()) {
+                            LFATAL << "Provided os info is not valid!";
+                            break;
+                        } else {
+                            installManager->installOS(&raspbianInfo);
+                        }
                         break;
                     }
                     case 5:

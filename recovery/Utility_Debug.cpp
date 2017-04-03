@@ -7,8 +7,8 @@
 
 #include "Utility.h"
 
-QVariantList* Utility::Debug::getRaspbianJSON() {
-    QVariantMap *raspbian = new QVariantMap();
+QMap<QString, QVariant>* Utility::Debug::getRaspbianJSON() {
+    QMap<QString, QVariant> *raspbian = new QMap<QString, QVariant>();
     raspbian->insert("description", "A community-created port of Debian jessie for the Raspberry Pi");
     raspbian->insert("feature_level", 35120124);
     raspbian->insert("icon", "http://downloads.raspberrypi.org/raspbian/Raspbian.png");
@@ -31,7 +31,5 @@ QVariantList* Utility::Debug::getRaspbianJSON() {
     tarballs->append("http://downloads.raspberrypi.org/raspbian/root.tar.xz");
     raspbian->insert("tarballs", *tarballs);
 
-    QVariantList *oses = new QVariantList();
-    oses->append(*raspbian);
-    return oses;
+    return raspbian;
 }

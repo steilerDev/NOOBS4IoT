@@ -5,5 +5,4 @@ build.log
 build.err.log
 recovery/.idea/
 recovery/CMakeLists.txt
-*.qm
 recovery/cmake-build-debug/
