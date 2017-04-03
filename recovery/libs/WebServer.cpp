@@ -74,10 +74,30 @@ bool Request::processRequest(int clientSocket) {
         return false;
     }
 
-    if(!parseRequest(requestString)) {
+    if(!parseRequest(requestString, false)) {
         LERROR << "Unable to parse request";
         return false;
     }
+
+    if(headers.find("Expect") != headers.end() && headers["Expect"].compare("100-continue\r") == 0) {
+        LDEBUG << "Found expect header, building continue response";
+        Response expectResponse(clientSocket);
+        expectResponse.code = 100;
+        expectResponse.phrase = "Continue";
+        LDEBUG << "Sending continue response";
+        expectResponse.send();
+        LDEBUG << "Continuing reading";
+        requestString.clear();
+        if(!readRequest(clientSocket, &requestString)) {
+            LERROR << "Unable to continue to read from socket";
+            return false;
+        }
+        if(!parseRequest(requestString, true)) {
+            LERROR << "Unable to parse continue request";
+            return false;
+        }
+    }
+    // Handle 100 Continue header
 
     return true;
 }
@@ -129,10 +149,10 @@ bool Request::readRequest(int clientSocket, string *requestString) {
     return true;
 }
 
-bool Request::parseRequest(string &requestString) {
+bool Request::parseRequest(string &requestString, bool skipHeader) {
     LDEBUG << "Parsing request line by line";
     // Indicates if we are still in the header
-    bool header = true;
+    bool header = !skipHeader;
     // Indicates if we are at the request line
     bool methodLine = true;
 
@@ -193,7 +213,7 @@ bool Request::parseHeaderLine(string &headerLineString) {
         string value = headerLineVector[1];
         if (headerLineVector.size() > 2) {
             LDEBUG << "Additional splits occurred, re-merging";
-            for (int i = 2; i < headerLineVector.size(); i++) {
+            for (uint i = 2; i < headerLineVector.size(); i++) {
                 value.append(":" + headerLineVector[i]);
             }
         }
@@ -220,6 +240,7 @@ bool Request::parseBodyLine(string &bodyLineString) {
 //
 
 void Server::start(uint16_t port) {
+    stopServer = false;
     int newSocket;
 
     LDEBUG << "Creating listening socket";
@@ -322,9 +343,8 @@ void Server::all(string path, void (*callback)(Request*, Response*)) {
     addRoute(path, "ALL", callback);
 }
 
-string Server::getIP() {
-    QString ip = "127.0.0.1";
-    /**
+QString Server::getIP() {
+    QString ip;
     QList<QHostAddress> ipAddresses = QNetworkInterface::allAddresses();
             foreach(QHostAddress address, ipAddresses) {
             if(ip.isEmpty()) {
@@ -340,8 +360,7 @@ string Server::getIP() {
     if(ip.startsWith("[")) {
         ip.append("]");
     }
-     **/
-    return  ip.toStdString();
+    return ip;
 }
 
 vector<string> Server::split(const string &text, char sep) {

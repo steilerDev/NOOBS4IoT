@@ -26,7 +26,7 @@
 #include <sstream>
 #include <QString>
 
-#define BUFFER_SIZE 175
+#define BUFFER_SIZE 4096
 #define HEADER_BUFFER 4096
 #define SERVER_NAME "NOOBS4IoT"
 #define SERVER_VERSION "0.1a"
@@ -45,7 +45,7 @@ private:
     // This function will read from the socket and store the result in requestString
     bool readRequest(int clientSocket, string* requestString);
     // This function will parse the request in request string and populate all class members
-    bool parseRequest(string &requestString);
+    bool parseRequest(string &requestString, bool skipHeader);
     // This function will parse the method/request line and populate the members 'method' and 'path'
     bool parseMethodLine(string &methodLineString);
 
@@ -85,12 +85,12 @@ public:
 
     void start(uint16_t port);
 
-    static string getIP();
+    static QString getIP();
     static vector<string> split(const string &text, char sep);
 
 private:
     std::vector<Route> ROUTES;
-    bool stopServer = false;
+    bool stopServer;
 
     void addRoute(string path, string method, void (*callback)(Request*, Response*));
     bool matchRoute(Request* request, Response* response);
