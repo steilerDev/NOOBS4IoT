@@ -8,7 +8,6 @@
 #include <QList>
 #include "OSInfo.h"
 
-
 class MultiImageWrite {
 public:
     explicit MultiImageWrite(const QList<OSInfo*> &oses);

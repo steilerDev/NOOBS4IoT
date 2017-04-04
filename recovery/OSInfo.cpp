@@ -5,152 +5,15 @@
 #include <QEventLoop>
 #include <QtNetwork/QNetworkConfigurationManager>
 #include <QtNetwork/QNetworkDiskCache>
-#include <QProcess>
 #include "OSInfo.h"
 #include "libs/easylogging++.h"
 #include "Utility.h"
 
-OSInfo::OSInfo(const QVariantMap &os) : _valid(true), _supported(false)
-{
-    LDEBUG << "Creating OS object from JSON";
+OSInfo::OSInfo(const QMap<QString, QVariant> &os) {
+    LDEBUG << "Creating OSInfo object from JSON";
 
-    /*
-     * Netaccess
-     */
-
-    LINFO << " Configuring network access...";
-    QDir dir;
-    dir.mkdir(CACHE_DIR);
-    _netaccess = new QNetworkAccessManager();
-    QNetworkDiskCache *_cache = new QNetworkDiskCache();
-    _cache->setCacheDirectory(CACHE_DIR);
-    _cache->setMaximumCacheSize(CACHE_SIZE);
-    _netaccess->setCache(_cache);
-    QNetworkConfigurationManager manager;
-    _netaccess->setConfiguration(manager.defaultConfiguration());
-
-    Utility::Sys::mountSettingsPartition();
-
-    /*
-     * Parsing JSON
-     */
-
-    LDEBUG << "Checking for OS name";
-    if(os.contains("name")) {
-        _name = os.value("name").toString();
-        LDEBUG << "Found " << _name.toUtf8().constData();
-    } else if (os.contains("os_name")) {
-        _name = os.value("os_name").toString();
-        LDEBUG << "Found " << _name.toUtf8().constData();
-    } else {
-        LFATAL << "OS Name not specified!";
-        _valid = false;
-    }
-
-    LDEBUG << "Checking if config indicates non-bootability";
-    _bootable = os.value(OS_BOOTABLE, true).toBool() && !os.value(OS_NAME).toString().contains("Data Partition", Qt::CaseInsensitive);
-    if(!_bootable) {
-        LFATAL << "OS does not seem to be bootable!";
-        _valid = false;
-    } else {
-        LDEBUG << "OS seems to be bootable";
-    }
-
-    /* RISC_OS needs a matching riscos_offset */
-    LDEBUG << "Checking for a RISC OS configuration";
-    if (_name.contains("risc", Qt::CaseInsensitive)) {
-        if(os.contains(OS_RISCOS_OFFSET)) {
-            _riscosOffset = os.value(OS_RISCOS_OFFSET).toInt();
-            if (_riscosOffset != RISCOS_OFFSET) {
-                LWARNING << "RiscOS Offset does not match expected value";
-            }
-        } else {
-            _riscosOffset = RISCOS_OFFSET;
-            LWARNING << "No RiscOS Offset available, using default value";
-        }
-    }
-
-    LDEBUG << "Checking if current model is supported by OS";
-    QString _model = Utility::Sys::getFileContents("/proc/device-tree/model");
-    if (os.contains(OS_SUP_MODELS)) {
-        QStringList supportedModels = os.value(OS_SUP_MODELS).toStringList();
-        foreach (QString m, supportedModels) {
-            /*
-             * Check if the full formal model name (e.g. "Raspberry Pi 2 Model B Rev 1.1")
-             * contains the string we are told to look for (e.g. "Pi 2")
-             */
-            _supported = _supported || _model.contains(m, Qt::CaseInsensitive);
-        }
-        if(!_supported) {
-            LFATAL << "Model " << _model.toUtf8().constData()
-                   << " is not listed as a supported device: "
-                   << os.value("supported_models").toStringList().join(", ").toUtf8().constData();
-            _valid = false;
-        } else {
-            LDEBUG << "Model seems to be supported";
-        }
-    } else {
-        LWARNING << "No information about supported devices available";
-    }
-
-    LDEBUG << "Parsing tarball information";
-    if(os.contains(OS_TARBALLS)) {
-        _tarballs = os.value(OS_TARBALLS).toStringList();
-    } else {
-        LFATAL << "No tarball information available!";
-        _valid = false;
-    }
-
-    /*
-     * Parsing nested JSON files, that need to be downloaded
-     */
-
-    LDEBUG << "Checking for os info";
-    if(os.contains(OS_INFO)) {
-        parseOSInfo(os.value(OS_INFO).toString());
-    } else {
-        LFATAL << "No os info available!";
-        _valid = false;
-    }
-
-    LDEBUG << "Checking for partition info";
-    if(os.contains(OS_PARTITION_INFO)) {
-        parsePartitionInfo(os.value(OS_PARTITION_INFO).toString());
-    } else {
-        LFATAL << "No partition info available!";
-        _valid = false;
-    }
-
-    /*
-     * Optional metadata
-     */
-
-    LINFO << "Downloading optional meta-files...";
-
-    // Existence is optional, but if it should be there it's bad
-    if (os.contains(OS_PARTITION_SETUP)) {
-        if(!Utility::Sys::putFileContents(_folder + OS_PARTITION_SETUP_MF, downloadRessource(os.value(OS_PARTITION_SETUP).toString()))) {
-            LFATAL << "Unable to save partition setup script to " << _folder.toUtf8().constData() << OS_PARTITION_SETUP_MF;
-            _valid = false;
-        }
-    }
-
-    // Rest is nice to have (actually we need either for this use case, keeping it though due to legacy reasons)
-    if (os.contains(OS_MARKETING_INFO)) {
-        if(!Utility::Sys::putFileContents(_folder + OS_MARKETING_INFO_MF, downloadRessource(os.value(OS_MARKETING_INFO).toString()))) {
-            LERROR << "Unable to save marketing info to " << _folder.toUtf8().constData() << OS_MARKETING_INFO_MF;
-        } else {
-            LDEBUG << "Extracting marketing archive";
-            QProcess::execute("tar xf " + _folder + OS_MARKETING_INFO_MF + " -C " + _folder);
-            QFile::remove(_folder + OS_MARKETING_INFO_MF);
-        }
-    }
-
-    if (os.contains(OS_ICON)) {
-        if(!Utility::Sys::putFileContents(_folder + OS_ICON_MF, downloadRessource(os.value(OS_ICON).toString()))) {
-            LERROR << "Unable to save os icon to " << _folder.toUtf8().constData() << OS_ICON_MF;
-        }
-    }
+    initNetwork();
+    _valid = parseOS(os);
 }
 
 OSInfo::~OSInfo() {
@@ -161,8 +24,122 @@ OSInfo::~OSInfo() {
     _partitions.clear();
 }
 
+bool OSInfo::parseOS(const QMap<QString, QVariant> &os) {
+    /*
+     * OS Name
+     */
+    if(!(Utility::Json::parseEntry<QString>(os, "name", &_name, false, "os name") ||
+         Utility::Json::parseEntry<QString>(os, "os_name", &_name, false, "os name"))) {
+        return false;
+    } else {
+        LDEBUG << "Found " << _name.toUtf8().constData();
+    }
 
-void OSInfo::parseOSInfo(const QString &url) {
+    /*
+     * Bootable
+     */
+    if(!Utility::Json::parseEntry<bool>(os, OS_BOOTABLE, &_bootable, false, "bootability")) {
+        _bootable = !_name.contains("Data Partition", Qt::CaseInsensitive);
+    }
+    if(!_bootable) {
+        LFATAL << "OS does not seem to be bootable!";
+        return false;
+    } else {
+        LDEBUG << "OS seems to be bootable";
+    }
+
+    /*
+     * RISC OS
+     */
+    if (_name.contains("risc", Qt::CaseInsensitive)) {
+        if(!Utility::Json::parseEntry<int>(os, OS_RISCOS_OFFSET, &_riscosOffset, false, "RiscOS offset")) {
+            LWARNING << "Using default RiscOS offset";
+            _riscosOffset = RISCOS_OFFSET;
+        }
+
+        if(_riscosOffset != RISCOS_OFFSET) {
+            LWARNING << "RiscOS offset does not match expected value";
+        }
+        LDEBUG << "Found RiscOS offset " << _riscosOffset;
+    }
+
+    /*
+     * Model support
+     */
+    QStringList supportedModels;
+    QString _model = Utility::Sys::getFileContents("/proc/device-tree/model");
+    _supported = false;
+    if(Utility::Json::parseEntry<QStringList>(os, OS_SUP_MODELS, &supportedModels, true, "OS Support")) {
+        _supported = true; //If no supported model that's ok
+        foreach (QString m, supportedModels) {
+            /*
+             * Check if the full formal model name (e.g. "Raspberry Pi 2 Model B Rev 1.1")
+             * contains the string we are told to look for (e.g. "Pi 2")
+             */
+            _supported = _supported || _model.contains(m, Qt::CaseInsensitive);
+        }
+    }
+    if(!_supported) {
+        LFATAL << "Model " << _model.toUtf8().constData()
+               << " is not listed as a supported device: "
+               << os.value("supported_models").toStringList().join(", ").toUtf8().constData();
+        return false;
+    } else {
+        LDEBUG << "Model seems to be supported";
+    }
+
+    /*
+     * Tarball information
+     */
+    if(!Utility::Json::parseEntry<QStringList>(os, OS_TARBALLS, &_tarballs, false, "tarball information")) {
+        return false;
+    }
+
+    /*
+     * Parsing nested OS info
+     */
+    QString url;
+    if(!Utility::Json::parseEntry<QString>(os, OS_INFO, &url, false, "OS info URL")) {
+        return false;
+    } else {
+        LDEBUG << "Found OS info URL " << url.toUtf8().constData();
+        if(!parseOSInfo(url)) {
+            LFATAL << "Error while parsing os info";
+            return false;
+        }
+    }
+
+    /*
+     * Parsing nested OS partition info
+     */
+    if(!Utility::Json::parseEntry<QString>(os, OS_PARTITION_INFO, &url, false, "OS partition info URL")) {
+        return false;
+    } else {
+        LDEBUG << "Found OS partition info URL " << url.toUtf8().constData();
+        if(!parsePartitionInfo(url)) {
+            LFATAL << "Error while parsing OS partition info";
+            return false;
+        }
+    }
+
+    url.clear();
+    if(!Utility::Json::parseEntry<QString>(os, OS_PARTITION_SETUP, &url, true, "OS partition setup URL")) {
+        return false;
+    } else if (url.isEmpty()) {
+        LWARNING << "Unable to find OS partition setup URL";
+    } else {
+        LDEBUG << "Found OS partition setup URL" << url.toUtf8().constData();
+        _partitionSetupScript = downloadRessource(url);
+        if(_partitionSetupScript.isEmpty()) {
+            LFATAL << "Unable to download OS partition setup script";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool OSInfo::parseOSInfo(const QString &url) {
     LDEBUG << "Processing OS info";
     QMap<QString, QVariant> osInfo = Utility::Json::parseJson(downloadRessource(url));
 
@@ -170,94 +147,69 @@ void OSInfo::parseOSInfo(const QString &url) {
      * Values that might already have been set previously
      */
 
-    if(osInfo.contains("name")) {
-        if (_name != osInfo.value("name").toString()) {
-            LWARNING << "Provided name does not match name from OS info, using OS info's value";
-            _name = osInfo.value("name").toString();
-        }
-    } else {
-        LWARNING << "OS name is not available in OS info";
+    if(Utility::Json::parseEntry<QString>(osInfo, "name", &_name, true, "OS name")) {
+        LDEBUG << "Eventually found new OS name " << _name.toUtf8().constData();
     }
 
-    if(osInfo.contains(OS_BOOTABLE)) {
-        if (_bootable != osInfo.value(OS_BOOTABLE).toBool()) {
-            LWARNING << "Bootable property does not match property from OS info, using OS info's value";
-            _bootable = osInfo.value(OS_BOOTABLE).toBool();
+    if(Utility::Json::parseEntry<bool>(osInfo, OS_BOOTABLE, &_bootable, true, "bootability")) {
+        if(!_bootable) {
+            LFATAL << "Detected non-bootability";
+            return false;
+        } else {
+            LDEBUG << "Found that OS is bootable";
         }
-    } else {
-        LWARNING << "Bootable property is not available in OS info";
-    }
-
-    if(osInfo.contains(OS_RISCOS_OFFSET)) {
-        if(_riscosOffset != osInfo.value(OS_RISCOS_OFFSET).toInt()) {
-            LWARNING << "RiscOS property does not match property from OS info, using OS info's value";
-            _riscosOffset = osInfo.value(OS_RISCOS_OFFSET).toInt();
-        }
-    } else {
-        LWARNING << "RiscOS offset is not available in OS info";
     }
 
     /*
      * New information
      */
 
-    if(osInfo.contains(OS_VERSION)) {
-        _version = osInfo.value(OS_VERSION).toString();
-    } else {
-        LWARNING << "OS version is not available in OS info";
+    if(Utility::Json::parseEntry<QString>(osInfo, OS_VERSION, &_version, true, "OS version")) {
+        LDEBUG << "Found OS version " << _version.toUtf8().constData();
     }
 
-    if(osInfo.contains(OS_DESC)) {
-        _description = osInfo.value(OS_DESC).toString();
-    } else {
-        LWARNING << "Description is not available in OS info";
+    if(Utility::Json::parseEntry<QString>(osInfo, OS_DESC, &_description, true, "OS description")) {
+        LDEBUG << "Found OS description " << _description.toUtf8().constData();
     }
 
-    if(osInfo.contains(OS_RELEASE_DATE)) {
-        _releaseDate = osInfo.value(OS_RELEASE_DATE).toString();
-    } else {
-        LWARNING << "Release date is not available in OS info";
+    if(Utility::Json::parseEntry<QString>(osInfo, OS_RELEASE_DATE, &_releaseDate, true, "OS release date")) {
+        LDEBUG << "Found OS release date " << _releaseDate.toUtf8().constData();
     }
 
-    LDEBUG << "Writing OS info to disk";
-    createFolderStructure(); //Creating folder structure here, because os name could have changed
-
-    if(!Utility::Json::saveToFile(_folder + OS_INFO_MF, osInfo)) {
-        LERROR << "Unable to save os info to " << _folder.toUtf8().constData() << OS_INFO_MF;
-    } else {
-        LINFO << "Successfully processed OS info";
-    }
+    return true;
 }
 
-
-void OSInfo::parsePartitionInfo(const QString &url) {
+bool OSInfo::parsePartitionInfo(const QString &url) {
     LINFO << "Processing partition info";
     QMap<QString, QVariant> partitionInfo = Utility::Json::parseJson(downloadRessource(url));
-    if(partitionInfo.contains(OS_PARTITIONS)) {
-        int i = 0;
-        if(partitionInfo.value(OS_PARTITIONS).toList().size() != _tarballs.size()) {
+    QVariantList partitionInfoList;
+
+    if(!Utility::Json::parseEntry<QVariantList>(partitionInfo, OS_PARTITIONS, &partitionInfoList, false, "OS partitions")) {
+        return false;
+    } else {
+        if(partitionInfoList.size() != _tarballs.size()) {
             LFATAL << "Mismatch between number of available tarballs and OS partitions!";
-            _valid = false;
+            return false;
         } else {
             PartitionInfo *partInfo;
-            foreach(QVariant partition, partitionInfo.value(OS_PARTITIONS).toList()) {
-                partInfo = new PartitionInfo(partition.toMap(), _tarballs[i++]);
-                if(partInfo->isValid()) {
-                    _partitions.append(partInfo);
+            int i = 0;
+            foreach(QVariant partition, partitionInfoList) {
+                if(partition.canConvert<QVariantMap>()) {
+                    partInfo = new PartitionInfo(partition.toMap(), _tarballs[i++]);
+                    if(partInfo->isValid()) {
+                        _partitions.append(partInfo);
+                    } else {
+                        LFATAL << "Invalid partition info found";
+                        return false;
+                    }
                 } else {
-                    LFATAL << "Invalid partition info found";
-                    _valid = false;
+                    LFATAL << "Unable to parse partition due to type error";
+                    return false;
                 }
             }
         }
     }
-
-    LDEBUG << "Writing partition info to disk";
-    if(!Utility::Json::saveToFile(_folder + OS_PARTITION_INFO_MF, partitionInfo)) {
-        LERROR << "Unable to save partition information to " << _folder.toUtf8().constData() << OS_PARTITION_INFO_MF;
-    } else {
-        LINFO << "Successfully processed partition info";
-    }
+    return true;
 }
 
 QByteArray OSInfo::downloadRessource(const QString &url) {
@@ -293,16 +245,17 @@ QByteArray OSInfo::downloadRessource(const QString &url) {
     }
 }
 
-// This function checks if the folder is available, creates it and stores the path
-void OSInfo::createFolderStructure() {
-    QDir d;
-    _folder = METADATA_DIR + _name;
-    _folder.replace(' ', '_');
-    LDEBUG << "Using " << _folder.toUtf8().constData() << "/ as target";
-    if (!d.exists(_folder)){
-        d.mkpath(_folder);
-    }
-    _folder.append("/");
+void OSInfo::initNetwork() {
+    LINFO << " Configuring network access...";
+    //QDir dir;
+    //dir.mkdir(CACHE_DIR);
+    _netaccess = new QNetworkAccessManager();
+    //QNetworkDiskCache *_cache = new QNetworkDiskCache();
+    //_cache->setCacheDirectory(CACHE_DIR);
+    //_cache->setMaximumCacheSize(CACHE_SIZE);
+    //_netaccess->setCache(_cache);
+    QNetworkConfigurationManager manager;
+    _netaccess->setConfiguration(manager.defaultConfiguration());
 }
 
 QVariantList OSInfo::vPartitionList() {

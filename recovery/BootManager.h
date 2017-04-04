@@ -31,6 +31,7 @@ public:
 
     static void installOSREST(Request* request, Response* response);
     static void setDefaultBootPartitionREST(Request* request, Response* response);
+    static void rebootToDefaultPartition(Request* request, Response* response);
 
     /*
      * The following function save the default partition's number to

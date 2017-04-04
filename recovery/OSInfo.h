@@ -24,31 +24,23 @@
 
 // Keys of the OS map
 #define OS_DESC "description"
-#define OS_MARKETING_INFO "marketing_info"
 #define OS_INFO "os_info"
-#define OS_NAME "os_name"
-#define OS_PARTITION_INFO "partition_info"
+#define OS_PARTITION_INFO "partitions_info"
 #define OS_PARTITIONS "partitions"
 #define OS_PARTITION_SETUP "partition_setup"
 #define OS_RELEASE_DATE "release_date"
 #define OS_SUP_MODELS "supported_models"
 #define OS_TARBALLS "tarballs"
 #define OS_BOOTABLE "bootable"
-#define OS_ICON "icon"
 #define OS_VERSION "version"
 #define OS_RISCOS_OFFSET "riscos_offset" // Formerly known as RISCOS_OFFSET_KEY
 
 // Directory for all metadata
-#define METADATA_DIR "/settings/os/"
 #define CACHE_DIR "/settings/cache"
 #define CACHE_SIZE 8 * 1024 * 1024
 
 // Meta-Data filenames, stored in METADATA_DIR/<os_name>/
-#define OS_INFO_MF "os.json"
-#define OS_PARTITION_INFO_MF "partitions.json"
-#define OS_MARKETING_INFO_MF "marketing.tar"
-#define OS_PARTITION_SETUP_MF "partition_setup.sh"
-#define OS_ICON_MF "icon.png"
+#define OS_PARTITION_SETUP_PATH "/tmp/partition_setup.sh"
 
 class OSInfo {
 
@@ -73,6 +65,7 @@ public:
     inline QList<PartitionInfo *> *partitions() { return &_partitions; }
     inline bool bootable() { return _bootable; }
     inline bool isValid() { return _valid; } // Shows if config looks valid
+    inline QByteArray* partitionSetupScript() { return &_partitionSetupScript; }
 
 protected:
     QString _folder,
@@ -92,20 +85,25 @@ protected:
 
     QList<PartitionInfo *> _partitions;
     QNetworkAccessManager *_netaccess;
+    QByteArray _partitionSetupScript;
+
 
 private:
+    bool parseOS(const QMap<QString, QVariant> &os);
+
     /*
      * This function retrieves the os_info.json file, parses its information into the object and stores the file persistently
      */
-    void parseOSInfo(const QString &url);
+    bool parseOSInfo(const QString &url);
 
     /*
      * This function retrieves the partitions.json file, parses its information into the object and stores the file persistently
      */
-    void parsePartitionInfo(const QString &url);
+    bool parsePartitionInfo(const QString &url);
 
+
+    void initNetwork();
     QByteArray downloadRessource(const QString &url);
-    void createFolderStructure();
 };
 
 #endif // RECOVERY_OSINFO_H

@@ -27,7 +27,11 @@
 #include "PreSetup.h"
 #include "InstallManager.h"
 
-BootManager::BootManager(): QObject(), webserver(true) {}
+BootManager *_bootManager;
+
+BootManager::BootManager(): QObject(), webserver(true) {
+    _bootManager = this;
+}
 
 void BootManager::setDefaultBootPartitionREST(Request *request, Response *response) {
     LINFO << "Got request to set default boot partition to "  << request->body;
@@ -72,6 +76,15 @@ void BootManager::installOSREST(Request *request, Response *response) {
     }
 }
 
+void BootManager::rebootToDefaultPartition(Request *request, Response *response) {
+    response->phrase = "OK";
+    response->code = 200;
+    response->type = "text/plain";
+    response->body = "Reboot into default partition now\n";
+    response->send();
+    _bootManager->bootIntoPartition();
+}
+
 void BootManager::run() {
 
     if(Utility::Sys::mountSettingsPartition()) {
@@ -101,6 +114,7 @@ void BootManager::run() {
             Server server;
             server.post("/os", &BootManager::installOSREST);
             server.post("/bootPartition", &BootManager::setDefaultBootPartitionREST);
+            server.post("/reboot", &BootManager::rebootToDefaultPartition);
 
             LINFO << "Starting server...";
 
@@ -108,6 +122,7 @@ void BootManager::run() {
             std::cout << "REST API listening on " << ip << ":" << PORT << std::endl;
             std::cout << "POST JSON object with OS information to '" << ip << ":" << PORT << "/os' in order to install the os (request will timeout, since response will be send after install is finished!)" << std::endl;
             std::cout << "POST partition device string to '" << ip << ":" << PORT << "/bootPartition' in order to set it as default boot partition" << std::endl;
+            std::cout << "POST to '" << ip << ":" << PORT << "/reboot' in order to reboot to the default boot partition" << std::endl;
             server.start(PORT);
         } else {
             LINFO << "'no-webserver' argument found, starting local-mode...";

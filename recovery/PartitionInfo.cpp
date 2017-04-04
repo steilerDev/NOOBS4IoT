@@ -17,6 +17,7 @@
 #include <QDir>
 #include "PartitionInfo.h"
 #include "libs/easylogging++.h"
+#include "Utility.h"
 
 /*
  * Keys of partition info map
@@ -33,20 +34,30 @@
 #define PI_ACTIVE "active"
 #define PI_PART_TYPE "partition_type"
 
-PartitionInfo::PartitionInfo(const QVariantMap &partInfo, const QString &tarball) : _tarball(tarball),
-                                                                                    _mountedDir("") ,
-                                                                                    _valid(true) {
+PartitionInfo::PartitionInfo(const QMap<QString, QVariant> &partInfo,
+                             const QString &tarball) : _tarball(tarball),
+                                                       _mountedDir(""),
+                                                       _partitionSizeNominal(0),
+                                                       _requiresPartitionNumber(0),
+                                                       _offset(0),
+                                                       _uncompressedTarballSize(0),
+                                                       _emptyFS(false),
+                                                       _wantMaximised(false),
+                                                       _active(false) {
+    LDEBUG << "Creating PartitionInfo object from JSON";
 
-    if(partInfo.contains(PI_FS_TYPE)) {
-        _fstype = partInfo.value(PI_FS_TYPE).toByteArray().toLower();
+    _valid = parsePartitionInfo(partInfo);
+}
+
+bool PartitionInfo::parsePartitionInfo(QMap<QString, QVariant> partitionInfo) {
+
+    if(!Utility::Json::parseEntry<QByteArray>(partitionInfo, PI_FS_TYPE, &_fstype, false, "filesystem type")) {
+        return false;
     } else {
-        LFATAL << "No filesystem type specified!";
-        _valid = false;
+        LDEBUG << "Found " << _fstype.constData() << " as filestystem type";
     }
 
-    if(partInfo.contains(PI_PART_TYPE)) {
-        _partitionType = partInfo.value(PI_PART_TYPE).toByteArray();
-    } else if (_valid) {
+    if(!Utility::Json::parseEntry<QByteArray>(partitionInfo, PI_PART_TYPE, &_partitionType, false, "partition type")) {
         LWARNING << "No partition type specified, concluding partition type from file system type.";
         if (_fstype.contains("fat")) {
             _partitionType = "0c"; /* FAT32 LBA */
@@ -57,55 +68,38 @@ PartitionInfo::PartitionInfo(const QVariantMap &partInfo, const QString &tarball
         } else {
             _partitionType = "83"; /* Linux native */
         }
-        LDEBUG << "Using " << _partitionType.constData() << " as partition type";
-    } else {
-        LFATAL << "Unable to detect partition type";
-        _valid = false;
+    }
+    LDEBUG << "Using " << _partitionType.constData() << " as partition type";
+
+    if(Utility::Json::parseEntry<QByteArray>(partitionInfo, PI_MKFS_OP, &_mkfsOptions, true, "MKFS options")) {
+        LDEBUG << "Found " << _mkfsOptions.constData() << " as MKFS options";
     }
 
-    if(partInfo.contains(PI_MKFS_OP)) {
-        _mkfsOptions = partInfo.value(PI_MKFS_OP).toByteArray();
-    } else {
-        LWARNING << "No MKFS options specified";
+    if(Utility::Json::parseEntry<QByteArray>(partitionInfo, PI_LABEL, &_label, true, "label")){
+        LDEBUG << "Found " << _label.constData() << " as label";
     }
 
-    if(partInfo.contains(PI_LABEL)) {
-        _label = partInfo.value(PI_LABEL).toByteArray();
-    } else {
-        LWARNING << "No label specified";
+    if(Utility::Json::parseEntry<int>(partitionInfo, PI_OFFSET, &_offset, true, "offset")) {
+        LDEBUG << "Found offset of " << _offset;
     }
 
-    if(partInfo.contains(PI_OFFSET)) {
-        _offset = partInfo.value(PI_OFFSET).toInt();
-    } else {
-        _offset = 0;
-        LWARNING << "No offset specified";
+    if(Utility::Json::parseEntry<int>(partitionInfo, PI_PART_SIZE_NOM, &_partitionSizeNominal, true, "nominal partition size")) {
+        LDEBUG << "Found nominal size of " << _partitionSizeNominal;
     }
 
-    if(partInfo.contains(PI_PART_SIZE_NOM)) {
-        _partitionSizeNominal = partInfo.value(PI_PART_SIZE_NOM).toInt();
-    } else {
-        _partitionSizeNominal = 0;
-        LWARNING << "No nominal partition size specified";
+    if(Utility::Json::parseEntry<int>(partitionInfo, PI_REQ_PART_NO, &_requiresPartitionNumber, true, "required partition number")) {
+        LDEBUG << "Found required number of partitions: " << _requiresPartitionNumber;
     }
 
-    if(partInfo.contains(PI_REQ_PART_NO)) {
-        _requiresPartitionNumber = partInfo.value(PI_REQ_PART_NO).toInt();
-    } else {
-        _requiresPartitionNumber = 0;
-        LWARNING << "No required partition number specified";
+    if(Utility::Json::parseEntry<int>(partitionInfo, PI_UNCOMPRESSED_TAR_SIZE, &_uncompressedTarballSize, true, "uncompressed tarball size")) {
+        LDEBUG << "Found uncompressed tarball size: " << _uncompressedTarballSize;
     }
 
-    if(partInfo.contains(PI_UNCOMPRESSED_TAR_SIZE)) {
-        _uncompressedTarballSize = partInfo.value(PI_UNCOMPRESSED_TAR_SIZE).toInt();
-    } else {
-        _uncompressedTarballSize = 0;
-        LWARNING << "No uncompressed tarball size specified";
-    }
+    Utility::Json::parseEntry<bool>(partitionInfo, PI_WANT_MAXIMISED, &_wantMaximised, true, "want maximised");
+    Utility::Json::parseEntry<bool>(partitionInfo, PI_EMPTY_FS, &_emptyFS, true, "empty FS");
+    Utility::Json::parseEntry<bool>(partitionInfo, PI_ACTIVE, &_active, true, "active partition");
 
-    _wantMaximised = partInfo.value(PI_WANT_MAXIMISED, false).toBool();
-    _emptyFS       = partInfo.value(PI_EMPTY_FS, false).toBool();
-    _active        = partInfo.value(PI_ACTIVE, false).toBool();
+    return true;
 }
 
 PartitionInfo::PartitionInfo(int partitionNr, int offset, int sectors, const QByteArray &partType) : _partitionType(partType),
@@ -166,4 +160,3 @@ bool PartitionInfo::unmountPartition() {
         return true;
     }
 }
-

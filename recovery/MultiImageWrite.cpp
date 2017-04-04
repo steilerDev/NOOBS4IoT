@@ -436,63 +436,72 @@ bool MultiImageWrite::processImage(OSInfo *image) {
     LINFO << os_name.toUtf8().constData() << ": Saving display mode to config.txt";
     patchConfigTxt();
 
-    /* Partition setup script can either reside in the image folder
-     * or inside the boot partition tarball */
-    QString postInstallScript;
-    if (QFile::exists(image->folder() + OS_PARTITION_SETUP_MF)) {
-        postInstallScript = image->folder() + OS_PARTITION_SETUP_MF;
-    } else if(QFile::exists("/mnt2/partition_setup.sh")) {
-        postInstallScript = "/mnt2/partition_setup.sh";
-    }
 
-    if (!postInstallScript.isEmpty()) {
-        LINFO << os_name.toUtf8().constData() << ": Running partition setup script from " << postInstallScript.toUtf8().constData();
-        QProcess proc;
-        QProcessEnvironment env;
-        QStringList args(postInstallScript);
-        env.insert("PATH", "/bin:/usr/bin:/sbin:/usr/sbin");
-
-        /* - Parameters to the partition-setup script are supplied both as
-         *   command line parameters and set as environement variables
-         * - Boot partition is mounted, working directory is set to its mnt folder
-         *
-         *  partition_setup.sh part1=/dev/mmcblk0p3 id1=LABEL=BOOT part2=/dev/mmcblk0p4
-         *  id2=UUID=550e8400-e29b-41d4-a716-446655440000
-         */
-        int pnr = 1;
-        foreach (PartitionInfo *p, *image->partitions()) {
-            QString part  = p->partitionDevice();
-            QString nr    = QString::number(pnr);
-            QString uuid  = getUUID(part);
-            QString label = getLabel(part);
-            QString id;
-            if (!label.isEmpty()) {
-                id = "LABEL="+label;
-            } else {
-                id = "UUID=" + uuid;
-            }
-
-            LDEBUG << "part" << part.toUtf8().constData() << uuid.toUtf8().constData() << label.toUtf8().constData();
-
-            args << "part"+nr+"="+part << "id"+nr+"="+id;
-            env.insert("part"+nr, part);
-            env.insert("id"+nr, id);
-            pnr++;
-        }
-
-        LDEBUG << "Executing: sh " << args.join(" ").toUtf8().constData();
-        LDEBUG << "Env: " << env.toStringList().join(" ").toUtf8().constData();
-        proc.setProcessChannelMode(proc.MergedChannels);
-        proc.setProcessEnvironment(env);
-        proc.setWorkingDirectory("/mnt2");
-        proc.start("/bin/sh", args);
-        proc.waitForFinished(-1);
-
-        if (proc.exitCode() != 0) {
-            LFATAL << os_name.toUtf8().constData() << ": Error executing partition setup script: " << proc.readAll().constData();
+    if(!image->partitionSetupScript()->isEmpty()) {
+        LDEBUG << "Writing partition setup script to disc, in order to execute it then";
+        //Todo: Implement overwrite function
+        if (!Utility::Sys::putFileContents(OS_PARTITION_SETUP_PATH, *image->partitionSetupScript())) {
+            LFATAL << "Unable to write partition setup script to disc!";
             return false;
         } else {
-            LINFO << "Successfully ran post-install scripts";
+            LINFO << os_name.toUtf8().constData() << ": Running partition setup script from "
+                  << OS_PARTITION_SETUP_PATH;
+            QProcess proc;
+            QProcessEnvironment env;
+            QStringList args(OS_PARTITION_SETUP_PATH);
+            env.insert("PATH", "/bin:/usr/bin:/sbin:/usr/sbin");
+
+            /* - Parameters to the partition-setup script are supplied both as
+             *   command line parameters and set as environement variables
+             * - Boot partition is mounted, working directory is set to its mnt folder
+             *
+             *  partition_setup.sh part1=/dev/mmcblk0p3 id1=LABEL=BOOT part2=/dev/mmcblk0p4
+             *  id2=UUID=550e8400-e29b-41d4-a716-446655440000
+             */
+            int pnr = 1;
+            foreach (PartitionInfo *p, *image->partitions()) {
+                QString part = p->partitionDevice();
+                QString nr = QString::number(pnr);
+                QString uuid = getUUID(part);
+                QString label = getLabel(part);
+                QString id;
+                if (!label.isEmpty()) {
+                    id = "LABEL=" + label;
+                } else {
+                    id = "UUID=" + uuid;
+                }
+
+                LDEBUG << "part" << part.toUtf8().constData() << uuid.toUtf8().constData()
+                       << label.toUtf8().constData();
+
+                args << "part" + nr + "=" + part << "id" + nr + "=" + id;
+                env.insert("part" + nr, part);
+                env.insert("id" + nr, id);
+                pnr++;
+            }
+
+            LDEBUG << "Executing: sh " << args.join(" ").toUtf8().constData();
+            LDEBUG << "Env: " << env.toStringList().join(" ").toUtf8().constData();
+            proc.setProcessChannelMode(proc.MergedChannels);
+            proc.setProcessEnvironment(env);
+            proc.setWorkingDirectory("/mnt2");
+            proc.start("/bin/sh", args);
+            proc.waitForFinished(-1);
+
+            if (proc.exitCode() != 0) {
+                LFATAL << os_name.toUtf8().constData() << ": Error executing partition setup script: "
+                       << proc.readAll().constData();
+                return false;
+            } else {
+                LINFO << "Successfully ran post-install scripts";
+            }
+            LDEBUG << "Removing post-install script";
+            QFile script(OS_PARTITION_SETUP_PATH);
+            if(!script.remove()) {
+                LFATAL << "Unable to delete post-install script";
+                return false;
+            }
+
         }
     } else {
         LDEBUG << "No post-install script available";

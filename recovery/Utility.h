@@ -51,6 +51,31 @@ namespace Utility {
         bool saveToFile(const QString &filename, const QVariant &json);
         void printJson(QMap<QString, QVariant> &json);
         void printJsonArray(QList<QVariant> &json);
+
+        // This function attemps to parse an entry to the given format. It returns true on success and writes the value into target.
+        // If optional is set to true, the function will return true without writing to the target if the value was not found in the provided map.
+        // description is used for logging reasons.
+        template <typename T>
+        static bool parseEntry(const QMap<QString, QVariant> source, const QString &key, T* target, const bool optional, const std::string &description) {
+            LDEBUG << "Trying to parse " << description;
+            if(source.contains(key)) {
+                if(source.value(key).canConvert<T>()) {
+                    *target = source.value(key).value<T>();
+                    return true;
+                } else {
+                    LFATAL << "Unable to parse " << description << " (wrong format)";
+                    return false;
+                }
+            } else {
+                if(optional) {
+                    LWARNING << "Unable to find " << description;
+                    return true;
+                } else {
+                    LFATAL << "Unable to find " << description;
+                    return false;
+                }
+            }
+        }
     }
 
     namespace Sys {

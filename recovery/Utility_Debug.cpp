@@ -17,7 +17,7 @@ QMap<QString, QVariant>* Utility::Debug::getRaspbianJSON() {
     raspbian->insert("os_info", "http://downloads.raspberrypi.org/raspbian/os.json");
     raspbian->insert("os_name", "Raspbian");
     raspbian->insert("partition_setup", "http://downloads.raspberrypi.org/raspbian/partition_setup.sh");
-    raspbian->insert("partition_info", "http://downloads.raspberrypi.org/raspbian/partitions.json");
+    raspbian->insert("partitions_info", "http://downloads.raspberrypi.org/raspbian/partitions.json");
     raspbian->insert("release_date", "2016-05-27");
     raspbian->insert("supported_hex_revisions", "2,3,4,5,6,7,8,9,d,e,f,10,11,12,14,19,1040,1041,0092,0093,2082");
     QVariantList *supported_models = new QVariantList();

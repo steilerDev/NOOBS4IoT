@@ -14,13 +14,11 @@ class PartitionInfo
 {
 public:
     /* Constructor. Gets called from OsInfo with info from json file */
-    explicit PartitionInfo(const QVariantMap &m, const QString &tarball);
+    explicit PartitionInfo(const QMap<QString, QVariant> &m, const QString &tarball);
     explicit PartitionInfo(int partitionNr, int offset, int sectors, const QByteArray &partType);
 
     bool mountPartition(const QString &dir, const char* args = "");
     bool unmountPartition();
-
-
 
     /*
      * Setter
@@ -67,6 +65,9 @@ protected:
          _wantMaximised,
          _active,
          _valid;
+
+private:
+    bool parsePartitionInfo(QMap<QString, QVariant> partitionInfo);
 };
 
 #endif // PARTITIONINFO_H
