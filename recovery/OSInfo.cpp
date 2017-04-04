@@ -29,6 +29,8 @@ OSInfo::OSInfo(const QVariantMap &os) : _valid(true), _supported(false)
     QNetworkConfigurationManager manager;
     _netaccess->setConfiguration(manager.defaultConfiguration());
 
+    Utility::Sys::mountSettingsPartition();
+
     /*
      * Parsing JSON
      */
@@ -162,7 +164,7 @@ OSInfo::~OSInfo() {
 
 void OSInfo::parseOSInfo(const QString &url) {
     LDEBUG << "Processing OS info";
-    QVariantMap osInfo = Utility::Json::parse(downloadRessource(url)).toMap();
+    QMap<QString, QVariant> osInfo = Utility::Json::parseJson(downloadRessource(url));
 
     /*
      * Values that might already have been set previously
@@ -230,7 +232,7 @@ void OSInfo::parseOSInfo(const QString &url) {
 
 void OSInfo::parsePartitionInfo(const QString &url) {
     LINFO << "Processing partition info";
-    QVariantMap partitionInfo = Utility::Json::parse(downloadRessource(url)).toMap();
+    QMap<QString, QVariant> partitionInfo = Utility::Json::parseJson(downloadRessource(url));
     if(partitionInfo.contains(OS_PARTITIONS)) {
         int i = 0;
         if(partitionInfo.value(OS_PARTITIONS).toList().size() != _tarballs.size()) {
@@ -280,6 +282,7 @@ QByteArray OSInfo::downloadRessource(const QString &url) {
         return downloadRessource(redirectionUrl);
     } else if (reply->error() != reply->NoError || httpStatusCode < 200 || httpStatusCode > 399) {  // Not found or unavailable
         LFATAL << "Unable to download " << url.toUtf8().constData();
+        LDEBUG << "Error Code " << reply->error() << ", status code " << httpStatusCode;
         delete (reply);
         return QByteArray();
     } else {

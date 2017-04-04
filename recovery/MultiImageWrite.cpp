@@ -1,3 +1,16 @@
+//
+// Created by Frank Steiler on 9/14/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
+//
+// MultiImageWrite.cpp:
+//      This class takes the paramaters provided by the InstallManager and writes
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This class is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
+//
 #include "MultiImageWrite.h"
 #include "libs/easylogging++.h"
 #include "BootManager.h"
@@ -244,8 +257,7 @@ bool MultiImageWrite::writeImages() {
     return true;
 }
 
-bool MultiImageWrite::writePartitionTable(const QMap<int, PartitionInfo *> &pmap)
-{
+bool MultiImageWrite::writePartitionTable(const QMap<int, PartitionInfo *> &pmap) {
     /* Write partition table using sfdisk */
 
     /* Fixed NOOBS partition */
@@ -563,8 +575,7 @@ bool MultiImageWrite::isLabelAvailable(const QByteArray &label) {
     return (QProcess::execute("/sbin/findfs LABEL="+label) != 0);
 }
 
-bool MultiImageWrite::untar(const QString &tarball)
-{
+bool MultiImageWrite::untar(const QString &tarball) {
     QString cmd = "sh -o pipefail -c \"";
 
     if (isURL(tarball)) {
@@ -587,8 +598,7 @@ bool MultiImageWrite::untar(const QString &tarball)
         return false;
     }
 
-    if (!isURL(tarball))
-    {
+    if (!isURL(tarball)) {
         cmd += " "+tarball;
     }
     cmd += " | tar x -C /mnt2 ";
@@ -764,7 +774,6 @@ QByteArray MultiImageWrite::getUUID(const QString part) {
     return result;
 }
 
-bool MultiImageWrite::isURL(const QString &s)
-{
+bool MultiImageWrite::isURL(const QString &s) {
     return s.startsWith("http:") || s.startsWith("https:");
 }

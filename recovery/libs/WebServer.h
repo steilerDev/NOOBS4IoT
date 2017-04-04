@@ -4,6 +4,7 @@
 // WebServer.h:
 //      A simple HTTP/1.1 Web Server implementation, providing callback functions on multiple routes.
 //      The server is only accepting a single request at a time and blocks until the callback returns.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
 //
 // This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
 // See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
@@ -96,5 +97,4 @@ private:
     bool matchRoute(Request* request, Response* response);
 };
 
-
-#endif //WEBSERVER_WEBSERVER_H
+#endif //WEBSERVER_H

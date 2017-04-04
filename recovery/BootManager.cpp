@@ -1,8 +1,16 @@
 //
-// Created by Frank Steiler on 9/14/16.
-// Copyright (c) 2016 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 9/14/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// BootManager.cpp: [...]
+// BootManager.cpp:
+//      This class is the boot manager of the system. It decides (based on command line arguments and the state of
+//      system) which action needs to be taken.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This class is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #include <QDir>
@@ -48,27 +56,18 @@ void BootManager::installOSREST(Request *request, Response *response) {
         response->body = "Unable to install OS\n";
     } else {
         InstallManager *installManager = new InstallManager();
-        OSInfo osInfo(osInfoJson);
-        if(!osInfo.isValid()) {
-            LERROR << "Provided OS info is not valid!";
-            response->phrase = "Bad Request";
-            response->code = 400;
+        if(!installManager->installOS(osInfoJson)) {
+            LERROR << "Unable to install OS";
+            response->phrase = "Internal Server Error";
+            response->code = 500;
             response->type = "text/plain";
-            response->body = "Provided OS info is invalid\n";
+            response->body = "Unable to install OS\n";
         } else {
-            if(!installManager->installOS(&osInfo)) {
-                LERROR << "Unable to install OS";
-                response->phrase = "Internal Server Error";
-                response->code = 500;
-                response->type = "text/plain";
-                response->body = "Unable to install OS\n";
-            } else {
-                LINFO << "Successfully installed OS";
-                response->phrase = "OK";
-                response->code = 200;
-                response->type = "text/plain";
-                response->body = "Successfully installed OS\n";
-            }
+            LINFO << "Successfully installed OS";
+            response->phrase = "OK";
+            response->code = 200;
+            response->type = "text/plain";
+            response->body = "Successfully installed OS\n";
         }
     }
 }
@@ -93,6 +92,8 @@ void BootManager::run() {
             LERROR << "Unable to remove 'runinstaller' from commandline arguments!";
         }
         preSetup.startNetworking();
+
+        Utility::Sys::mountSettingsPartition();
 
         std::cout << "Recovery mode started!" << std::endl << std::endl;
         if(webserver) {
@@ -141,14 +142,7 @@ void BootManager::run() {
                     }
                     case 4: {
                         InstallManager *installManager = new InstallManager();
-                        OSInfo raspbianInfo(*Utility::Debug::getRaspbianJSON());
-                        if(!raspbianInfo.isValid()) {
-                            LFATAL << "Provided os info is not valid!";
-                            break;
-                        } else {
-                            installManager->installOS(&raspbianInfo);
-                        }
-                        break;
+                        installManager->installOS(*Utility::Debug::getRaspbianJSON());
                     }
                     case 5:
                         stayInMenu = false;

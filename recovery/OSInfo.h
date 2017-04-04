@@ -1,10 +1,20 @@
-#ifndef OSINFO_H
-#define OSINFO_H
+//
+// Created by Frank Steiler on 10/24/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
+//
+// OSInfo.h:
+//      This class holds all necessary information about the installation of an Operating System. It can be created
+//      through the QMap representation of a Json file based on the default NOOBS layout: http://downloads.raspberrypi.org/os_list_v3.json
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This class is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
+//
 
-/**
- * OS info model
- * Contains the information from os.json, and has a pointer to the partitions
- */
+#ifndef RECOVERY_OSINFO_H
+#define RECOVERY_OSINFO_H
 
 #include <QObject>
 #include <QList>
@@ -26,8 +36,7 @@
 #define OS_BOOTABLE "bootable"
 #define OS_ICON "icon"
 #define OS_VERSION "version"
-// Formerly known as RISCOS_OFFSET_KEY:
-#define OS_RISCOS_OFFSET "riscos_offset"
+#define OS_RISCOS_OFFSET "riscos_offset" // Formerly known as RISCOS_OFFSET_KEY
 
 // Directory for all metadata
 #define METADATA_DIR "/settings/os/"
@@ -47,7 +56,6 @@ public:
     // The constructor takes the JSON, formatted as Map, downloads all necessary metadata and stores it in this variable
     explicit OSInfo(const QVariantMap &os);
     ~OSInfo();
-
 
     /*
      * Virtual getter
@@ -100,4 +108,4 @@ private:
     void createFolderStructure();
 };
 
-#endif // OSINFO_H
+#endif // RECOVERY_OSINFO_H

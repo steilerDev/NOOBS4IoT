@@ -1,12 +1,20 @@
 //
-// Created by Frank Steiler on 9/14/16.
+// Created by Frank Steiler on 9/14/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// BootManager.h: [...]
+// BootManager.h:
+//      This class is the boot manager of the system. It decides (based on command line arguments and the state of
+//      system) which action needs to be taken.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This class is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #ifndef RECOVERY_BOOTMANAGER_H
 #define RECOVERY_BOOTMANAGER_H
-
 
 #include <QVariant>
 #include "PartitionInfo.h"
@@ -43,12 +51,11 @@ private:
     bool bootCheck();
     bool hasInstalledOS();
     QVariantList getInstalledOS();
-    // Should the webserver be started
+    // Flag indicating whether the webserver should be started.
     bool webserver;
 
 signals:
     void finished();
 };
-
 
 #endif //RECOVERY_BOOTMANAGER_H

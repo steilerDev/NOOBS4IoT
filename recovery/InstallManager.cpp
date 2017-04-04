@@ -51,7 +51,14 @@ InstallManager::~InstallManager() {
  *          ]
  *      },
  */
-void InstallManager::installOS(const QVariantList &oses) {
+
+bool InstallManager::installOS(const QMap<QString, QVariant> &os) {
+    QVariantList osList;
+    osList.append(os);
+    return installOS(osList);
+}
+
+bool InstallManager::installOS(const QVariantList &oses) {
     OSInfo *osInfo;
     foreach(QVariant os, oses) {
         LDEBUG << "Creating OSInfo from os map";
@@ -65,14 +72,16 @@ void InstallManager::installOS(const QVariantList &oses) {
 
     if(_osList->empty()) {
         LFATAL << "No OS left to install, aborting";
-        return;
+        return false;
     } else {
         /* All meta files downloaded, extract slides tarball, and launch image writer thread */
         MultiImageWrite imageWriteThread(*_osList);
         if(!imageWriteThread.writeImages()) {
             LFATAL << "Unable to write images!";
+            return false;
         } else {
             LINFO << "Successfully installed specified OSes";
+            return true;
         }
     }
 }
