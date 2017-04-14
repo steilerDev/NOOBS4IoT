@@ -134,6 +134,10 @@ void BootManager::run() {
             std::cout << "POST JSON object with OS information to '" << ip << ":" << PORT << "/os' in order to install the os (request will timeout, since response will be send after install is finished!)" << std::endl;
             std::cout << "POST partition device string to '" << ip << ":" << PORT << "/bootPartition' in order to set it as default boot partition" << std::endl;
             std::cout << "POST to '" << ip << ":" << PORT << "/reboot' in order to reboot to the default boot partition" << std::endl;
+
+            const qrcodegen::QrCode qrCode = qrcodegen::QrCode::encodeText(ip, qrcodegen::QrCode::Ecc::HIGH);
+            Utility::printQrCode(qrCode);
+
             server.start(PORT);
         } else {
             LINFO << "'no-webserver' argument found, starting local-mode...";

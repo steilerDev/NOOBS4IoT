@@ -11,6 +11,7 @@
 #include <QString>
 #include <QVariant>
 #include "libs/easylogging++.h"
+#include "libs/QRCode/QrCode.hpp"
 
 /* Location to download the list of available distributions from
  * Multiple lists can be specified by space separating the URLs */
@@ -94,6 +95,8 @@ namespace Utility {
     namespace Debug {
         QMap<QString, QVariant>* getRaspbianJSON();
     }
+
+    void printQrCode(const qrcodegen::QrCode &qrCode);
 }
 
 #endif //RECOVERY_UTLILITY_H
