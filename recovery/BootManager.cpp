@@ -59,24 +59,35 @@ void BootManager::installOSREST(Request *request, Response *response) {
         response->type = "text/plain";
         response->body = "Unable to install OS\n";
     } else {
-        InstallManager *installManager = new InstallManager();
-        if(!installManager->installOS(osInfoJson)) {
-            LERROR << "Unable to install OS";
-            response->phrase = "Internal Server Error";
-            response->code = 500;
+        OSInfo os = OSInfo(osInfoJson);
+        if(!os.isValid()) {
+            LERROR << "OS Json creates invalid OS Info object";
+            LERROR << "Json does not conform specification!";
+            response->phrase = "Bad Request";
+            response->code = 400;
             response->type = "text/plain";
             response->body = "Unable to install OS\n";
         } else {
-            LINFO << "Successfully installed OS";
-            response->phrase = "OK";
-            response->code = 200;
-            response->type = "text/plain";
-            response->body = "Successfully installed OS\n";
+            InstallManager *installManager = new InstallManager();
+            if (!installManager->installOS(os)) {
+                LERROR << "Unable to install OS";
+                response->phrase = "Internal Server Error";
+                response->code = 500;
+                response->type = "text/plain";
+                response->body = "Unable to install OS\n";
+            } else {
+                LINFO << "Successfully installed OS";
+                response->phrase = "OK";
+                response->code = 200;
+                response->type = "text/plain";
+                response->body = "Successfully installed OS\n";
+            }
         }
     }
 }
 
 void BootManager::rebootToDefaultPartition(Request *request, Response *response) {
+    Q_UNUSED(request);
     response->phrase = "OK";
     response->code = 200;
     response->type = "text/plain";
@@ -157,7 +168,12 @@ void BootManager::run() {
                     }
                     case 4: {
                         InstallManager *installManager = new InstallManager();
-                        installManager->installOS(*Utility::Debug::getRaspbianJSON());
+                        OSInfo os = OSInfo(*Utility::Debug::getRaspbianJSON());
+                        if(!os.isValid()) {
+                            LERROR <<  "OSInfo object is invalid";
+                        } else {
+                            installManager->installOS(os);
+                        }
                     }
                     case 5:
                         stayInMenu = false;

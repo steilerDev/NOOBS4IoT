@@ -220,7 +220,7 @@ QByteArray OSInfo::downloadRessource(const QString &url) {
     QNetworkReply *reply = _netaccess->get(QNetworkRequest(url));
 
     QObject::connect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
-    QObject::connect(reply, SIGNAL(error(NetworkError)), &eventLoop, SLOT(quit()));
+    //QObject::connect(reply, SIGNAL(error(NetworkError)), &eventLoop, SLOT(quit()));
     // Waiting for request to finish
     LDEBUG << "Waiting for download to finish";
     eventLoop.exec();
@@ -234,7 +234,7 @@ QByteArray OSInfo::downloadRessource(const QString &url) {
         return downloadRessource(redirectionUrl);
     } else if (reply->error() != reply->NoError || httpStatusCode < 200 || httpStatusCode > 399) {  // Not found or unavailable
         LFATAL << "Unable to download " << url.toUtf8().constData();
-        LDEBUG << "Error Code " << reply->error() << ", status code " << httpStatusCode;
+        LDEBUG << "Error Code " << reply->error() << ", status code " << httpStatusCode << ", content: " << reply->readAll().constData();
         delete (reply);
         return QByteArray();
     } else {
@@ -258,7 +258,7 @@ void OSInfo::initNetwork() {
     _netaccess->setConfiguration(manager.defaultConfiguration());
 }
 
-QVariantList OSInfo::vPartitionList() {
+QVariantList OSInfo::vPartitionList() const {
     QVariantList vPartitions;
     foreach (PartitionInfo *p, _partitions) {
         vPartitions.append(p->partitionDevice());

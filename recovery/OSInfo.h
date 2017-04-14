@@ -52,19 +52,19 @@ public:
     /*
      * Virtual getter
      */
-    QVariantList vPartitionList();
+    QVariantList vPartitionList() const;
 
     /*
      * Getter methods
      */
-    inline QString folder() { return _folder; }
-    inline QString flavour() { return _flavour; }
-    inline QString name() { return _name; }
-    inline QString description() { return _description; }
-    inline QString releaseDate() { return _releaseDate; }
+    inline QString folder() const { return _folder; }
+    inline QString flavour() const { return _flavour; }
+    inline QString name() const { return _name; }
+    inline QString description() const { return _description; }
+    inline QString releaseDate() const { return _releaseDate; }
     inline QList<PartitionInfo *> *partitions() { return &_partitions; }
-    inline bool bootable() { return _bootable; }
-    inline bool isValid() { return _valid; } // Shows if config looks valid
+    inline bool bootable() const { return _bootable; }
+    inline bool isValid() const { return _valid; } // Shows if config looks valid
     inline QByteArray* partitionSetupScript() { return &_partitionSetupScript; }
 
 protected:
