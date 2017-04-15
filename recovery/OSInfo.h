@@ -54,6 +54,8 @@ public:
      */
     QVariantList vPartitionList() const;
 
+    void printOSInfo();
+
     /*
      * Getter methods
      */

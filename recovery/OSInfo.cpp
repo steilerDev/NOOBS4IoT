@@ -224,24 +224,39 @@ QByteArray OSInfo::downloadRessource(const QString &url) {
     // Waiting for request to finish
     LDEBUG << "Waiting for download to finish";
     eventLoop.exec();
+    QVariant statusCodeAttribute = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
 
-    int httpStatusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    QString redirectionUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
-
-    if (httpStatusCode > 300 && httpStatusCode < 400) {                                             // Redirect
-        LDEBUG << "Redirection - Re-trying download from" << redirectionUrl.toUtf8().constData();
-        delete (reply);
-        return downloadRessource(redirectionUrl);
-    } else if (reply->error() != reply->NoError || httpStatusCode < 200 || httpStatusCode > 399) {  // Not found or unavailable
-        LFATAL << "Unable to download " << url.toUtf8().constData();
-        LDEBUG << "Error Code " << reply->error() << ", status code " << httpStatusCode << ", content: " << reply->readAll().constData();
+    if(statusCodeAttribute.canConvert<int>()) {
+        int httpStatusCode = statusCodeAttribute.toInt();
+        LDEBUG << "Found HTTP status code " << httpStatusCode;
+        if (httpStatusCode > 300 && httpStatusCode < 400) {                                             // Redirect
+            QVariant redirectionUrlAttribute = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
+            QString redirectionUrl;
+            if(redirectionUrlAttribute.canConvert<QString>()) {
+                redirectionUrl = redirectionUrlAttribute.toString();
+                LDEBUG << "Found redirection URL " << redirectionUrl.toUtf8().constData();
+                delete (reply);
+                return downloadRessource(redirectionUrl);
+            } else {
+                LFATAL << "Unable to find redirection URL with status code " << httpStatusCode;
+                delete(reply);
+                return QByteArray();
+            }
+        } else if (reply->error() != reply->NoError || httpStatusCode < 200 || httpStatusCode > 399) {  // Not found or unavailable
+            LFATAL << "Unable to download " << url.toUtf8().constData();
+            LDEBUG << "Error Code " << reply->error() << ", status code " << httpStatusCode << ", content: " << reply->readAll().constData();
+            delete (reply);
+            return QByteArray();
+        } else {
+            LDEBUG << "Successfully downloaded " << url.toUtf8().constData();
+            QByteArray response(reply->readAll());
+            delete (reply);
+            return response;
+        }
+    } else {
+        LFATAL << "Unable to find http status code!";
         delete (reply);
         return QByteArray();
-    } else {
-        LDEBUG << "Successfully downloaded " << url.toUtf8().constData();
-        QByteArray response(reply->readAll());
-        delete (reply);
-        return response;
     }
 }
 
@@ -264,4 +279,40 @@ QVariantList OSInfo::vPartitionList() const {
         vPartitions.append(p->partitionDevice());
     }
     return vPartitions;
+}
+
+void OSInfo::printOSInfo() {
+
+    LDEBUG << "OSInfo: " << _name.toUtf8().constData();
+    LDEBUG << "    Description: " << _description.toUtf8().constData();
+    LDEBUG << "    Version: " << _version.toUtf8().constData();
+    LDEBUG << "    Release Date: " << _releaseDate.toUtf8().constData();
+    LDEBUG << "    Folder: " << _folder.toUtf8().constData();
+    LDEBUG << "    Flavour: " << _flavour.toUtf8().constData();
+    LDEBUG << "";
+    LDEBUG << "    Tarballs: " << _tarballs.join(" ").toUtf8().constData();
+    if(bootable()) {
+        LDEBUG << "    OS is bootable";
+    } else {
+        LDEBUG << "    OS is not bootable";
+    }
+    if(_valid) {
+        LDEBUG << "    OS is valid";
+    } else {
+        LDEBUG << "    OS is not valid";
+    }
+    if(_supported) {
+        LDEBUG << "    OS is supported";
+    } else {
+        LDEBUG << "    OS is not supported";
+    }
+    if(_riscosOffset) {
+        LDEBUG << "    RiscOS offset: " << _riscosOffset;
+    } else {
+        LDEBUG << "    No RiscOS offset defined";
+    }
+
+    foreach(PartitionInfo *part, _partitions) {
+        part->printPartitionInfo();
+    }
 }

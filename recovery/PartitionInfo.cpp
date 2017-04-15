@@ -59,13 +59,16 @@ bool PartitionInfo::parsePartitionInfo(QMap<QString, QVariant> partitionInfo) {
 
     if(!Utility::Json::parseEntry<QByteArray>(partitionInfo, PI_PART_TYPE, &_partitionType, false, "partition type")) {
         LWARNING << "No partition type specified, concluding partition type from file system type.";
-        if (_fstype.contains("fat")) {
+        QString fsString = QString(_fstype);
+        if(fsString.contains("fat", Qt::CaseInsensitive)) {
+            //_partitionType = "0E";
             _partitionType = "0c"; /* FAT32 LBA */
-        } else if (_fstype == "swap") {
+        } else if (fsString.contains("swap", Qt::CaseInsensitive)) {
             _partitionType = "82";
-        } else if (_fstype.contains("ntfs")) {
+        } else if (fsString.contains("ntfs", Qt::CaseInsensitive)) {
             _partitionType = "07";
         } else {
+            //_partitionType = "L";
             _partitionType = "83"; /* Linux native */
         }
     }
@@ -159,4 +162,14 @@ bool PartitionInfo::unmountPartition() {
         LWARNING << "Partition " << _partitionDevice.constData() << " is currently not mounted";
         return true;
     }
+}
+
+void PartitionInfo::printPartitionInfo() {
+    LDEBUG << "    PartitionInfo: " << _label.constData();
+    LDEBUG << "        Partition Device: " << _partitionDevice.constData();
+    LDEBUG << "        FS Type: " << _fstype.constData();
+    LDEBUG << "        Partition Type: " << _partitionType.constData();
+    LDEBUG << "        MKFS Options: " << _mkfsOptions.constData();
+    LDEBUG << "        Tarball: " << _tarball.toUtf8().constData();
+    LDEBUG << "        Mounted dir: " << _tarball.toUtf8().constData();
 }

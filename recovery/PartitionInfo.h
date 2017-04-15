@@ -20,6 +20,8 @@ public:
     bool mountPartition(const QString &dir, const char* args = "");
     bool unmountPartition();
 
+    void printPartitionInfo();
+
     /*
      * Setter
      */

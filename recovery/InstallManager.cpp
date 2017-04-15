@@ -470,7 +470,7 @@ bool InstallManager::writeImage(OSInfo &image) {
                 LDEBUG << "part" << part.toUtf8().constData() << uuid.toUtf8().constData()
                        << label.toUtf8().constData();
 
-                args << "part" + nr + "=" + part << "id" + nr + "=" + id;
+                args << " part" + nr + "=" + part << " id" + nr + "=" + id;
                 env.insert("part" + nr, part);
                 env.insert("id" + nr, id);
                 pnr++;
@@ -489,7 +489,8 @@ bool InstallManager::writeImage(OSInfo &image) {
                        << proc.readAll().constData();
                 return false;
             } else {
-                LINFO << "Successfully ran post-install scripts";
+                LINFO << os_name.toUtf8().constData() << ": Successfully ran post-install scripts";
+                LDEBUG << "Post-Install script output: " << proc.readAll().constData();
             }
             LDEBUG << "Removing post-install script";
             QFile script(OS_PARTITION_SETUP_PATH);

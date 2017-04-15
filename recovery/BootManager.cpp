@@ -68,6 +68,7 @@ void BootManager::installOSREST(Request *request, Response *response) {
             response->type = "text/plain";
             response->body = "Unable to install OS\n";
         } else {
+            os.printOSInfo();
             InstallManager *installManager = new InstallManager();
             if (!installManager->installOS(os)) {
                 LERROR << "Unable to install OS";
@@ -94,6 +95,16 @@ void BootManager::rebootToDefaultPartition(Request *request, Response *response)
     response->body = "Reboot into default partition now\n";
     response->send();
     _bootManager->bootIntoPartition();
+}
+
+void BootManager::exitToShell(Request *request, Response *response) {
+    Q_UNUSED(request);
+    response->phrase = "OK";
+    response->code = 200;
+    response->type = "text/plain";
+    response->body = "Exit to recovery shell now\n";
+    response->send();
+    exit(0);
 }
 
 void BootManager::run() {
@@ -126,6 +137,7 @@ void BootManager::run() {
             server.post("/os", &BootManager::installOSREST);
             server.post("/bootPartition", &BootManager::setDefaultBootPartitionREST);
             server.post("/reboot", &BootManager::rebootToDefaultPartition);
+            server.post("/exit", &BootManager::exitToShell);
 
             LINFO << "Starting server...";
 
@@ -134,6 +146,7 @@ void BootManager::run() {
             std::cout << "POST JSON object with OS information to '" << ip << ":" << PORT << "/os' in order to install the os (request will timeout, since response will be send after install is finished!)" << std::endl;
             std::cout << "POST partition device string to '" << ip << ":" << PORT << "/bootPartition' in order to set it as default boot partition" << std::endl;
             std::cout << "POST to '" << ip << ":" << PORT << "/reboot' in order to reboot to the default boot partition" << std::endl;
+            std::cout << "POST to '" << ip << ":" << PORT << "/exit' in order to exit to recovery shell" << std::endl;
 
             const qrcodegen::QrCode qrCode = qrcodegen::QrCode::encodeText(ip, qrcodegen::QrCode::Ecc::HIGH);
             Utility::printQrCode(qrCode);
