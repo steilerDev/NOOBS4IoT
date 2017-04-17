@@ -19,7 +19,7 @@
 #include <QVariant>
 #include "PartitionInfo.h"
 #include "OSInfo.h"
-#include "libs/WebServer.h"
+#include "libs/Web/WebServer.h"
 
 #define PORT 80
 
@@ -32,10 +32,10 @@ public:
     /*
      * Network callbacks
      */
-    static void installOSREST(Request* request, Response* response);
-    static void setDefaultBootPartitionREST(Request* request, Response* response);
-    static void rebootToDefaultPartition(Request* request, Response* response);
-    static void exitToShell(Request* request, Response* response);
+    static void installOSREST(Web::Server::Request* request, Web::Server::Response* response);
+    static void setDefaultBootPartitionREST(Web::Server::Request* request, Web::Server::Response* response);
+    static void rebootToDefaultPartition(Web::Server::Request* request, Web::Server::Response* response);
+    static void exitToShell(Web::Server::Request* request, Web::Server::Response* response);
 
     /*
      * The following function save the default partition's number to

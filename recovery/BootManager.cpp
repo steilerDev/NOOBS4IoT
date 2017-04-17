@@ -33,7 +33,7 @@ BootManager::BootManager(): QObject(), webserver(true) {
     _bootManager = this;
 }
 
-void BootManager::setDefaultBootPartitionREST(Request *request, Response *response) {
+void BootManager::setDefaultBootPartitionREST(Web::Server::Request *request, Web::Server::Response *response) {
     LINFO << "Got request to set default boot partition to "  << request->body;
     if(BootManager::setDefaultBootPartition(QString(request->body.c_str()))) {
         LINFO << "Successfully set default partition to " << request->body;
@@ -50,7 +50,7 @@ void BootManager::setDefaultBootPartitionREST(Request *request, Response *respon
     }
 }
 
-void BootManager::installOSREST(Request *request, Response *response) {
+void BootManager::installOSREST(Web::Server::Request *request, Web::Server::Response *response) {
     QMap<QString, QVariant> osInfoJson = Utility::Json::parseJson(QString(request->body.c_str()));
     if(osInfoJson.size() <= 0) {
         LERROR << "Unable to parse Json!";
@@ -81,29 +81,35 @@ void BootManager::installOSREST(Request *request, Response *response) {
                 response->phrase = "OK";
                 response->code = 200;
                 response->type = "text/plain";
-                response->body = "Successfully installed OS\n";
+                if(request->header.find("AutoReboot") != request->header.end()) {
+                    response->body = "Successfully installed OS and rebooting now!\n";
+                    response->sendResponse();
+                    _bootManager->bootIntoPartition();
+                } else {
+                    response->body = "Successfully installed OS\n";
+                }
             }
         }
     }
 }
 
-void BootManager::rebootToDefaultPartition(Request *request, Response *response) {
+void BootManager::rebootToDefaultPartition(Web::Server::Request *request, Web::Server::Response *response) {
     Q_UNUSED(request);
     response->phrase = "OK";
     response->code = 200;
     response->type = "text/plain";
     response->body = "Reboot into default partition now\n";
-    response->send();
+    response->sendResponse();
     _bootManager->bootIntoPartition();
 }
 
-void BootManager::exitToShell(Request *request, Response *response) {
+void BootManager::exitToShell(Web::Server::Request *request, Web::Server::Response *response) {
     Q_UNUSED(request);
     response->phrase = "OK";
     response->code = 200;
     response->type = "text/plain";
     response->body = "Exit to recovery shell now\n";
-    response->send();
+    response->sendResponse();
     exit(0);
 }
 
@@ -133,7 +139,7 @@ void BootManager::run() {
         std::cout << "Recovery mode started!" << std::endl << std::endl;
         if(webserver) {
             LINFO << "Creating web server...";
-            Server server;
+            Web::WebServer server;
             server.post("/os", &BootManager::installOSREST);
             server.post("/bootPartition", &BootManager::setDefaultBootPartitionREST);
             server.post("/reboot", &BootManager::rebootToDefaultPartition);
@@ -141,7 +147,7 @@ void BootManager::run() {
 
             LINFO << "Starting server...";
 
-            const char* ip = Server::getIP().toUtf8().constData();
+            const char* ip = Web::getIP().toUtf8().constData();
             std::cout << "REST API listening on " << ip << ":" << PORT << std::endl;
             std::cout << "POST JSON object with OS information to '" << ip << ":" << PORT << "/os' in order to install the os (request will timeout, since response will be send after install is finished!)" << std::endl;
             std::cout << "POST partition device string to '" << ip << ":" << PORT << "/bootPartition' in order to set it as default boot partition" << std::endl;
@@ -328,9 +334,9 @@ void BootManager::bootIntoPartition(const QString &partitionDevice) {
     }
 
     QString rebootDev;
-    if (QFileInfo("/sys/module/bcm2708/parameters/reboot_part").exists()) {
+    if (QFileInfo("/sys/module/bcm2709/parameters/reboot_part").exists()) {
         rebootDev = QString("/sys/module/bcm2708/parameters/reboot_part");
-    } else if (QFileInfo("/sys/module/bcm2709/parameters/reboot_part").exists()) {
+    } else if (QFileInfo("/sys/module/bcm2708/parameters/reboot_part").exists()) {
         rebootDev = QString("/sys/module/bcm2708/parameters/reboot_part");
     } else {
         LFATAL << "Unable to determine where to write reboot partition in (are you having a supported Raspberry Pi?)";

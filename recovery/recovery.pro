@@ -16,10 +16,12 @@ QMAKE_CXXFLAGS += -std=c++11
 CONFIG += c++11
 
 SOURCES += main.cpp \
-    libs/WebServer.cpp \
     libs/QRCode/BitBuffer.cpp \
     libs/QRCode/QrCode.cpp \
     libs/QRCode/QrSegment.cpp \
+    libs/Web/Web.cpp \
+    libs/Web/WebServer.cpp \
+    libs/Web/WebClient.cpp \
     Utility.cpp \
     Utility_Json.cpp \
     Utility_Sys.cpp \
@@ -32,11 +34,13 @@ SOURCES += main.cpp \
     InstallManager_Utility.cpp
 
 HEADERS  += \
-    libs/WebServer.h \
     libs/easylogging++.h \
     libs/QRCode/BitBuffer.hpp \
     libs/QRCode/QrCode.hpp \
     libs/QRCode/QrSegment.hpp \
+    libs/Web/Web.h \
+    libs/Web/WebServer.h \
+    libs/Web/WebClient.h \
     Utility.h \
     OSInfo.h \
     PartitionInfo.h \

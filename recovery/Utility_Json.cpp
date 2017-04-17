@@ -20,7 +20,7 @@ QMap<QString, QVariant> Utility::Json::parseJson(const QByteArray &jsonArray) {
     bool ok;
     QMap<QString, QVariant> json = parser.parse(jsonArray, &ok).toMap();
     if(!ok) {
-        LERROR << "Unable to parse JSON";
+        LERROR << "Unable to parse JSON: " << parser.errorString().toUtf8().constData() << " at line " << parser.errorLine();
         json.clear();
     } else {
         LDEBUG << "Succesfully parsed JSON";

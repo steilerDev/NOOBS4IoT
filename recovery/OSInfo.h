@@ -18,7 +18,6 @@
 
 #include <QObject>
 #include <QList>
-#include <QtNetwork/QNetworkAccessManager>
 #include <QStringList>
 #include "PartitionInfo.h"
 
@@ -86,7 +85,6 @@ protected:
     int _riscosOffset;
 
     QList<PartitionInfo *> _partitions;
-    QNetworkAccessManager *_netaccess;
     QByteArray _partitionSetupScript;
 
 
@@ -96,16 +94,15 @@ private:
     /*
      * This function retrieves the os_info.json file, parses its information into the object and stores the file persistently
      */
-    bool parseOSInfo(const QString &url);
+    bool parseOSInfo(QString &url);
 
     /*
      * This function retrieves the partitions.json file, parses its information into the object and stores the file persistently
      */
-    bool parsePartitionInfo(const QString &url);
+    bool parsePartitionInfo(QString &url);
 
 
-    void initNetwork();
-    QByteArray downloadRessource(const QString &url);
+    QByteArray downloadRessource(QString &url);
 };
 
 #endif // RECOVERY_OSINFO_H

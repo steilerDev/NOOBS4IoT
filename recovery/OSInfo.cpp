@@ -1,25 +1,17 @@
 #include <QStringList>
 #include <QDir>
-#include <QUrl>
-#include <QtNetwork/QNetworkReply>
-#include <QEventLoop>
-#include <QtNetwork/QNetworkConfigurationManager>
-#include <QtNetwork/QNetworkDiskCache>
 #include "OSInfo.h"
 #include "libs/easylogging++.h"
 #include "Utility.h"
+#include "libs/Web/WebClient.h"
 
 OSInfo::OSInfo(const QMap<QString, QVariant> &os) {
     LDEBUG << "Creating OSInfo object from JSON";
 
-    initNetwork();
     _valid = parseOS(os);
 }
 
 OSInfo::~OSInfo() {
-    if(_netaccess) {
-        delete(_netaccess);
-    }
     qDeleteAll(_partitions);
     _partitions.clear();
 }
@@ -139,7 +131,7 @@ bool OSInfo::parseOS(const QMap<QString, QVariant> &os) {
     return true;
 }
 
-bool OSInfo::parseOSInfo(const QString &url) {
+bool OSInfo::parseOSInfo(QString &url) {
     LDEBUG << "Processing OS info";
     QMap<QString, QVariant> osInfo = Utility::Json::parseJson(downloadRessource(url));
 
@@ -179,7 +171,7 @@ bool OSInfo::parseOSInfo(const QString &url) {
     return true;
 }
 
-bool OSInfo::parsePartitionInfo(const QString &url) {
+bool OSInfo::parsePartitionInfo(QString &url) {
     LINFO << "Processing partition info";
     QMap<QString, QVariant> partitionInfo = Utility::Json::parseJson(downloadRessource(url));
     QVariantList partitionInfoList;
@@ -212,65 +204,21 @@ bool OSInfo::parsePartitionInfo(const QString &url) {
     return true;
 }
 
-QByteArray OSInfo::downloadRessource(const QString &url) {
+QByteArray OSInfo::downloadRessource(QString &url) {
     LDEBUG << "Downloading " << url.toUtf8().constData();
 
-    QEventLoop eventLoop;
+    Web::WebClient webClient;
+    std::string urlString = std::string(url.toUtf8().constData());
+    std::string response = webClient.get(urlString);
 
-    QNetworkReply *reply = _netaccess->get(QNetworkRequest(url));
 
-    QObject::connect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
-    //QObject::connect(reply, SIGNAL(error(NetworkError)), &eventLoop, SLOT(quit()));
-    // Waiting for request to finish
-    LDEBUG << "Waiting for download to finish";
-    eventLoop.exec();
-    QVariant statusCodeAttribute = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-
-    if(statusCodeAttribute.canConvert<int>()) {
-        int httpStatusCode = statusCodeAttribute.toInt();
-        LDEBUG << "Found HTTP status code " << httpStatusCode;
-        if (httpStatusCode > 300 && httpStatusCode < 400) {                                             // Redirect
-            QVariant redirectionUrlAttribute = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
-            QString redirectionUrl;
-            if(redirectionUrlAttribute.canConvert<QString>()) {
-                redirectionUrl = redirectionUrlAttribute.toString();
-                LDEBUG << "Found redirection URL " << redirectionUrl.toUtf8().constData();
-                delete (reply);
-                return downloadRessource(redirectionUrl);
-            } else {
-                LFATAL << "Unable to find redirection URL with status code " << httpStatusCode;
-                delete(reply);
-                return QByteArray();
-            }
-        } else if (reply->error() != reply->NoError || httpStatusCode < 200 || httpStatusCode > 399) {  // Not found or unavailable
-            LFATAL << "Unable to download " << url.toUtf8().constData();
-            LDEBUG << "Error Code " << reply->error() << ", status code " << httpStatusCode << ", content: " << reply->readAll().constData();
-            delete (reply);
-            return QByteArray();
-        } else {
-            LDEBUG << "Successfully downloaded " << url.toUtf8().constData();
-            QByteArray response(reply->readAll());
-            delete (reply);
-            return response;
-        }
-    } else {
-        LFATAL << "Unable to find http status code!";
-        delete (reply);
+    if(response.empty()) {
+        LFATAL << "Unable to download " << url.toUtf8().constData();
         return QByteArray();
+    } else {
+        LDEBUG << "Successfully downloaded " << url.toUtf8().constData();
+        return QByteArray(response.c_str());
     }
-}
-
-void OSInfo::initNetwork() {
-    LINFO << " Configuring network access...";
-    //QDir dir;
-    //dir.mkdir(CACHE_DIR);
-    _netaccess = new QNetworkAccessManager();
-    //QNetworkDiskCache *_cache = new QNetworkDiskCache();
-    //_cache->setCacheDirectory(CACHE_DIR);
-    //_cache->setMaximumCacheSize(CACHE_SIZE);
-    //_netaccess->setCache(_cache);
-    QNetworkConfigurationManager manager;
-    _netaccess->setConfiguration(manager.defaultConfiguration());
 }
 
 QVariantList OSInfo::vPartitionList() const {
