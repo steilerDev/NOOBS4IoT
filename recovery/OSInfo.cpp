@@ -1,3 +1,18 @@
+//
+// Created by Frank Steiler on 10/24/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
+//
+// OSInfo.cpp:
+//      This class holds all necessary information about the installation of an Operating System. It can be created
+//      through the QMap representation of a Json file based on the default NOOBS layout: http://downloads.raspberrypi.org/os_list_v3.json
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
+//
+
 #include <QStringList>
 #include <QDir>
 #include "OSInfo.h"

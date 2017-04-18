@@ -1,8 +1,15 @@
 //
-// Created by Frank Steiler on 9/28/16.
-// Copyright (c) 2016 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 9/28/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// Utlility.h: [...]
+// Utility.h:
+//      This file contains general utility functions required by the application.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #ifndef RECOVERY_UTLILITY_H
@@ -12,10 +19,6 @@
 #include <QVariant>
 #include "libs/easylogging++.h"
 #include "libs/QRCode/QrCode.hpp"
-
-/* Location to download the list of available distributions from
- * Multiple lists can be specified by space separating the URLs */
-#define DEFAULT_REPO_SERVER  "http://downloads.raspberrypi.org/os_list_v3.json"
 
 /* Partitioning settings */
 #define PARTITION_ALIGNMENT  8192
@@ -41,7 +44,7 @@
 #define RISCOS_BLOB_SECTOR_OFFSET  (1)
 
 /* Maximum number of partitions */
-#define MAXIMUM_PARTITIONS  32
+#define MAXIMUM_PARTITIONS 32
 
 namespace Utility {
     namespace Json {

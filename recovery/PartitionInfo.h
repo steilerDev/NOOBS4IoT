@@ -1,17 +1,27 @@
-#ifndef PARTITIONINFO_H
-#define PARTITIONINFO_H
+//
+// Created by Frank Steiler on 10/25/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
+//
+// PartitionInfo.cpp
+//      This class holds all necessary information about the installation of an Operating System's partition. It can be
+//      created through the QMap representation of a Json file based on the "partitions_info" ressource within the default
+//      NOOBS specification: http://downloads.raspberrypi.org/os_list_v3.json.
+//      Required entries: 'filesystem_type'
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
+//
 
-/*
- * Partition information model
- * Contains information about a single partition from partitions.json
- * and runtime information like the partition device (/dev/mmcblk0pX) it was assigned
- */
+#ifndef RECOVERY_PARTITIONINFO_H
+#define RECOVERY_PARTITIONINFO_H
 
 #include <QObject>
 #include <QVariantMap>
 
-class PartitionInfo
-{
+class PartitionInfo {
 public:
     /* Constructor. Gets called from OsInfo with info from json file */
     explicit PartitionInfo(const QMap<QString, QVariant> &m, const QString &tarball);
@@ -72,4 +82,4 @@ private:
     bool parsePartitionInfo(QMap<QString, QVariant> partitionInfo);
 };
 
-#endif // PARTITIONINFO_H
+#endif // RECOVERY_PARTITIONINFO_H

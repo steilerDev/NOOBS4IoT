@@ -1,8 +1,14 @@
 //
-// Created by Frank Steiler on 4/17/17.
-// Copyright (c) 2017 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 4/17/17 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// WebClient.cpp: [...]
+// WebClient.cpp:
+//      This file contains several classes and helper functions providing extended WebClient functionalities. The
+//      WebClient class can be used to retrieve string based content from the web in a blocking fashion. No external,
+//      non-standard library is required for this file.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #include "WebClient.h"
@@ -41,7 +47,7 @@ string Web::WebClient::get(string &url) {
     return get(host, path, 80);
 }
 
-string Web::WebClient::get(string &host, string &path, int port) {
+string Web::WebClient::get(string &host, string &path, uint16_t port) {
     LINFO << "GETting resource " << path << " from " << host << ":" << port;
 
 
@@ -82,7 +88,7 @@ int Web::WebClient::openSocket(string &hostString, uint16_t port) {
         LFATAL << "Unable to get host by name!";
         return -1;
     }
-    bcopy(host->h_addr, &addr.sin_addr, host->h_length);
+    bcopy(host->h_addr, &addr.sin_addr, (size_t)((unsigned) host->h_length));
     addr.sin_port = htons(port);
     addr.sin_family = AF_INET;
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -112,15 +118,15 @@ bool Web::Client::Response::receiveResponse() {
             LERROR << "Request-Line does not conform specifications";
             return false;
         } else if (methodLineVector[0].compare("HTTP/1.1") != 0) {
-            // Specification says CRLF and getline splits at \n, to \r remains at end of line.
             LERROR << "This server only supports HTTP/1.1, found " << methodLineVector[2];
             return false;
         }
 
+        // Removing trailing \r
         this->phrase = methodLineVector[2].substr(0, methodLineVector[2].size()-1);
         this->code = stoi(methodLineVector[1]);
 
-        LDEBUG << "Found respose phrase: " << this->phrase;
+        LDEBUG << "Found response phrase: " << this->phrase;
         LDEBUG << "Found response code: " << this->code;
         return true;
     }

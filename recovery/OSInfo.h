@@ -6,7 +6,7 @@
 //      through the QMap representation of a Json file based on the default NOOBS layout: http://downloads.raspberrypi.org/os_list_v3.json
 //      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
 //
-// This class is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// This file is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
 // See https://github.com/raspberrypi/noobs for more information.
 //
 // This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
@@ -34,11 +34,6 @@
 #define OS_VERSION "version"
 #define OS_RISCOS_OFFSET "riscos_offset" // Formerly known as RISCOS_OFFSET_KEY
 
-// Directory for all metadata
-#define CACHE_DIR "/settings/cache"
-#define CACHE_SIZE 8 * 1024 * 1024
-
-// Meta-Data filenames, stored in METADATA_DIR/<os_name>/
 #define OS_PARTITION_SETUP_PATH "/tmp/partition_setup.sh"
 
 class OSInfo {

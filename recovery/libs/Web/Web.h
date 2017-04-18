@@ -1,8 +1,13 @@
 //
-// Created by Frank Steiler on 4/17/17.
-// Copyright (c) 2017 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 4/17/17 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// Web.h: [...]
+// Web.h:
+//      This file contains several classes and helper functions providing basic socket communication based on standard
+//      C sockets. Besides the getIP() function (which uses QtNetwork) no external non-standard library is required.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #ifndef WEB_WEB_H
@@ -10,7 +15,6 @@
 
 #include <string>
 #include <map>
-
 #include <dirent.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
@@ -27,9 +31,9 @@
 #define BUFFER_SIZE 4096
 #define HEADER_BUFFER 4096
 
-namespace Web {
+using namespace std;
 
-    using namespace std;
+namespace Web {
 
     class Web {
     public:
@@ -38,9 +42,6 @@ namespace Web {
 
     protected:
         Web(int socket): _socket(socket) {};
-
-        // The header line (e.g. GET URI HTTP/1.1 or HTTP/1.1 200 OK)
-        string headerLine;
 
         /*
          * Fills header and body member attribute;
@@ -52,10 +53,10 @@ namespace Web {
          */
         bool send();
 
+        // The header line (e.g. GET URI HTTP/1.1 or HTTP/1.1 200 OK)
+        string headerLine;
 
     private:
-        int _socket;
-
         // This function will read from the socket and store the result in receiveString
         bool readReceive(string *bufferString);
         // This function will parse the request in request string and populate header line, header and body
@@ -65,12 +66,14 @@ namespace Web {
         bool parseHeaderLine(const string &headerLineString);
         // This function will parse a single body line and append it to the body string
         bool parseBodyLine(const string &bodyLineString);
+
+        int _socket;
     };
 
     // This helper function splits the given string by the sep char
     vector<string> split(const string &text, const char sep);
+    // This helper returns the IP address of all available interfaces using the QtNetworking API
     QString getIP();
 }
-
 
 #endif //WEB_WEB_H

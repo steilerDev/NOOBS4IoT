@@ -1,8 +1,15 @@
 //
-// Created by Frank Steiler on 4/12/17.
-// Copyright (c) 2017 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 9/14/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// InstallManager_Utility.cpp: [...]
+// InstallManager_Utility.cpp:
+//      This file contains the supporting functions for installing Operation System(s).
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #include <QProcess>
@@ -320,6 +327,9 @@ void InstallManager::patchConfigTxt() {
             break;
         case 3: /* NTSC */
             dispOptions = "hdmi_ignore_hotplug=1\r\nsdtv_mode=0\r\n";
+            break;
+        default:
+            LWARNING << "Reached default case in patchConfigTxt, this should not happen";
             break;
     }
 

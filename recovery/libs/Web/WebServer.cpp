@@ -1,13 +1,18 @@
 //
-// Created by Frank Steiler on 4/17/17.
-// Copyright (c) 2017 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 4/17/17 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// Server.cpp: [...]
+// WebServer.cpp:
+//      This file contains several classes and helper functions providing extended WebServer functionalities. The
+//      WebServer class can be used to expose a simple, blocking REST-API to clients. It allows the selection of
+//      callback functions based on dynamic routing rules. No external, non-standard library is required for this file.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #include "WebServer.h"
 #include "../easylogging++.h"
-
 
 using namespace std;
 
@@ -114,7 +119,6 @@ void Web::WebServer::post(string path, void (*callback)(Server::Request*, Server
 void Web::WebServer::all(string path, void (*callback)(Server::Request*, Server::Response*)) {
     addRoute(path, "ALL", callback);
 }
-
 
 bool Web::Server::Request::receiveRequest() {
 

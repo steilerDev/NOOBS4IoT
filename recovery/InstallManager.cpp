@@ -1,8 +1,16 @@
 //
-// Created by Frank Steiler on 9/14/16.
-// Copyright (c) 2016 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 9/14/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// InstallManager.cpp: [...]
+// InstallManager.cpp:
+//      This class handles the install procedure of a single or multiple Operating Systems from a list of a single entity
+//      of OSInfo objects.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #include <QFile>
@@ -397,7 +405,6 @@ bool InstallManager::writeImage(OSInfo &image) {
                 }
             }
         }
-        //_part++;
     }
 
     LINFO << "Finished processing all partitions for " << os_name.toUtf8().constData();

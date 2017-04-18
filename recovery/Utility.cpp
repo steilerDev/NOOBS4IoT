@@ -1,8 +1,12 @@
 //
-// Created by Frank Steiler on 4/13/17.
-// Copyright (c) 2017 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 4/13/17 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// Utility.cpp: [...]
+// Utility.cpp:
+//      This file contains general utility functions required by the application.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
 //
 
 #include "Utility.h"

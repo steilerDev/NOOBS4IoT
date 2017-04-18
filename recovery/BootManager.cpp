@@ -3,10 +3,10 @@
 //
 // BootManager.cpp:
 //      This class is the boot manager of the system. It decides (based on command line arguments and the state of
-//      system) which action needs to be taken.
+//      the system) which action needs to be taken.
 //      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
 //
-// This class is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// This file is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
 // See https://github.com/raspberrypi/noobs for more information.
 //
 // This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
@@ -114,7 +114,6 @@ void BootManager::exitToShell(Web::Server::Request *request, Web::Server::Respon
 }
 
 void BootManager::run() {
-
     if(Utility::Sys::mountSettingsPartition()) {
         LFATAL << "Unable to mount settings partition";
         emit finished();
@@ -154,7 +153,7 @@ void BootManager::run() {
             std::cout << "POST to '" << ip << ":" << PORT << "/reboot' in order to reboot to the default boot partition" << std::endl;
             std::cout << "POST to '" << ip << ":" << PORT << "/exit' in order to exit to recovery shell" << std::endl;
 
-            const qrcodegen::QrCode qrCode = qrcodegen::QrCode::encodeText(ip, qrcodegen::QrCode::Ecc::HIGH);
+            const qrcodegen::QrCode qrCode = qrcodegen::QrCode::encodeText(ip, qrcodegen::QrCode::Ecc::LOW);
             Utility::printQrCode(qrCode);
 
             server.start(PORT);
@@ -335,7 +334,7 @@ void BootManager::bootIntoPartition(const QString &partitionDevice) {
 
     QString rebootDev;
     if (QFileInfo("/sys/module/bcm2709/parameters/reboot_part").exists()) {
-        rebootDev = QString("/sys/module/bcm2708/parameters/reboot_part");
+        rebootDev = QString("/sys/module/bcm2709/parameters/reboot_part");
     } else if (QFileInfo("/sys/module/bcm2708/parameters/reboot_part").exists()) {
         rebootDev = QString("/sys/module/bcm2708/parameters/reboot_part");
     } else {

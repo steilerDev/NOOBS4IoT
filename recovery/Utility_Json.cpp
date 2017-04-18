@@ -1,9 +1,17 @@
 //
-// Created by Frank Steiler on 9/28/16.
-// Copyright (c) 2016 Hewlett-Packard. All rights reserved.
+// Created by Frank Steiler on 9/28/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
-// Utility_Json.cpp: [...]
+// Utility_Json.cpp:
+//      This file contains utility functions for handling JSON objects: Parsing, serializing and printing.
+//      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
 //
+// This file is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
+// See https://github.com/raspberrypi/noobs for more information.
+//
+// This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
+// See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
+//
+
 #include "Utility.h"
 #include <qjson/parser.h>
 #include <qjson/serializer.h>

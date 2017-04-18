@@ -2,12 +2,9 @@
 // Created by Frank Steiler on 9/14/16 as part of NOOBS4IoT (https://github.com/steilerDev/NOOBS4IoT)
 //
 // main.cpp:
-//      This file is the entry point for the recovery application.. It defines the logging parameters and starts the
+//      This file is the entry point for the recovery application. It defines the logging parameters and starts the
 //      BootManager.
 //      For more information see https://github.com/steilerDev/NOOBS4IoT/wiki.
-//
-// This class is based on several files from the NOOBS project (c) 2013, Raspberry Pi All rights reserved.
-// See https://github.com/raspberrypi/noobs for more information.
 //
 // This file is licensed under a GNU General Public License v3.0 (c) Frank Steiler.
 // See https://raw.githubusercontent.com/steilerDev/NOOBS4IoT/master/LICENSE for more information.
