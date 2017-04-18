@@ -2,7 +2,7 @@
 
 This hard fork of [NOOBS (c) 2013, Raspberry Pi All rights reserved](https://github.com/raspberrypi/noobs) ([forked on 6th of September 2016](https://github.com/steilerDev/TOSCA4IoT_RPi/commit/7854f404d7653233f0d4c4d729ceed1e10ab9e88)) is intended to allow the usage of Raspberry Pi's in the context of remote provisioning. This project is part of the TOSCA project at the [Institute for the architecture of application systems (IAAS) at the University of Stuttgart](http://www.iaas.uni-stuttgart.de/).
 
-This project uses [EasyLogging++ (v8.91) by Majid Khan (c) 2017 muflihun.com](https://github.com/mkhan3189/EasyLoggingPP) licensed under a MIT license.
+This project uses [EasyLogging++ (v8.91) by Majid Khan (c) 2017 muflihun.com](https://github.com/mkhan3189/EasyLoggingPP) licensed under a MIT license and [QR Code generator library (C++) by Project Nayuki](https://www.nayuki.io/page/qr-code-generator-library) licensed under a MIT license.
 
 # Installation
 
