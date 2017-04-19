@@ -26,7 +26,11 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+
+#ifdef QT_CORE_LIB
 #include <QString>
+#include <QtNetwork/QNetworkInterface>
+#endif
 
 #define BUFFER_SIZE 4096
 #define HEADER_BUFFER 4096
@@ -68,12 +72,17 @@ namespace Web {
         bool parseBodyLine(const string &bodyLineString);
 
         int _socket;
+        ssize_t _bytesRead;
     };
 
     // This helper function splits the given string by the sep char
     vector<string> split(const string &text, const char sep);
+
+#ifdef QT_CORE_LIB
     // This helper returns the IP address of all available interfaces using the QtNetworking API
     QString getIP();
+#endif
+
 }
 
 #endif //WEB_WEB_H

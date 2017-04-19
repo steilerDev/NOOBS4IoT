@@ -386,22 +386,26 @@ bool InstallManager::writeImage(OSInfo &image) {
             }
 
             if (!curPartition->emptyFS()) {
-                LDEBUG << os_name.toUtf8().constData() << ": Mounting file system";
-
-                if(!curPartition->mountPartition("/mnt2")) {
-                    LFATAL << os_name.toUtf8().constData() << ": Error mounting file system";
-                    return false;
-                }
-
-                LINFO << os_name.toUtf8().constData() << ": Downloading and extracting filesystem";
-
-                if (!untar(curPartition->tarball())) {
-                    LFATAL << "Download and extracting file system failed!";
-                    curPartition->unmountPartition();
-                    return false;
+                if(curPartition->tarball().isEmpty()) {
+                    LWARNING << "No tarball available, this might be intentional!";
                 } else {
-                    LINFO << "Download and extracting file system successfull!";
-                    curPartition->unmountPartition();
+                    LDEBUG << os_name.toUtf8().constData() << ": Mounting file system";
+
+                    if(!curPartition->mountPartition("/mnt2")) {
+                        LFATAL << os_name.toUtf8().constData() << ": Error mounting file system";
+                        return false;
+                    }
+
+                    LINFO << os_name.toUtf8().constData() << ": Downloading and extracting filesystem";
+
+                    if (!untar(curPartition->tarball())) {
+                        LFATAL << "Download and extracting file system failed!";
+                        curPartition->unmountPartition();
+                        return false;
+                    } else {
+                        LINFO << "Download and extracting file system successfull!";
+                        curPartition->unmountPartition();
+                    }
                 }
             }
         }
@@ -483,12 +487,24 @@ bool InstallManager::writeImage(OSInfo &image) {
                 pnr++;
             }
 
-            LDEBUG << "Executing: sh " << args.join(" ").toUtf8().constData();
+            LDEBUG << "Executing: /bin/sh " << args.join(" ").toUtf8().constData();
             LDEBUG << "Env: " << env.toStringList().join(" ").toUtf8().constData();
             proc.setProcessChannelMode(proc.MergedChannels);
             proc.setProcessEnvironment(env);
             proc.setWorkingDirectory("/mnt2");
+            proc.setProcessChannelMode(QProcess::MergedChannels);
             proc.start("/bin/sh", args);
+
+            LDEBUG << "Waiting to start the script";
+            proc.waitForStarted();
+            LDEBUG << "Script started";
+            proc.waitForReadyRead(10000);
+            while(proc.state() != QProcess::NotRunning) {
+                if(!proc.waitForReadyRead(10000)) {
+                    LDEBUG << proc.readAll().constData();
+                }
+            }
+            LDEBUG << "Waiting for finished";
             proc.waitForFinished(-1);
 
             if (proc.exitCode() != 0) {

@@ -13,8 +13,6 @@
 #include "Web.h"
 #include "../easylogging++.h"
 
-#include <QtNetwork/QNetworkInterface>
-
 using namespace std;
 
 bool Web::Web::send() {
@@ -49,7 +47,8 @@ bool Web::Web::send() {
 }
 
  bool Web::Web::receive() {
-    LINFO << "Parsing received HTTP message";
+     _bytesRead = 0;
+    LINFO << "Receiving HTTP message";
     string bufferString;
     if(!readReceive(&bufferString)) {
         LERROR << "Unable to read receive from socket";
@@ -61,6 +60,9 @@ bool Web::Web::send() {
         return false;
     }
 
+    bool continueRead = false;
+    int messageSize = -1;
+
     if(header.find("Expect") != header.end() && header["Expect"].compare("100-continue\r") == 0) {
         LDEBUG << "Found expect header, building continue response";
         Web expectResponse(_socket);
@@ -68,17 +70,31 @@ bool Web::Web::send() {
         expectResponse.headerLine = "HTTP/1.0 100 Continue";
         LDEBUG << "Sending continue response";
         expectResponse.send();
-        LDEBUG << "Continuing reading";
-        bufferString.clear();
-        if(!readReceive(&bufferString)) {
-            LERROR << "Unable to continue to read from socket";
-            return false;
-        }
-        if(!parseReceive(bufferString, true)) {
-            LERROR << "Unable to parse continue request";
-            return false;
-        }
+        continueRead = true;
     }
+    if(header.find("Content-Length") != header.end() && std::stoi(header["Content-Length"]) > _bytesRead) {
+        messageSize = std::stoi(header["Content-Length"]);
+        // Removing last \n
+        this->body.pop_back();
+        LDEBUG << "Complete message not yet read (" << _bytesRead << " vs. " << messageSize << "), continuing read";
+        continueRead = true;
+    }
+
+     if(continueRead) {
+         LDEBUG << "Continuing reading";
+         bufferString.clear();
+         do {
+             if (!readReceive(&bufferString)) {
+                 LERROR << "Unable to continue to read from socket";
+                 return false;
+             }
+         } while(messageSize != -1 && _bytesRead < messageSize);
+
+         if(!parseReceive(bufferString, true)) {
+             LERROR << "Unable to parse continue request";
+             return false;
+         }
+     }
 
     return true;
 }
@@ -86,7 +102,6 @@ bool Web::Web::send() {
 bool Web::Web::readReceive(string *bufferString) {
     LDEBUG << "Reading HTTP message from socket";
     static char buffer[BUFFER_SIZE];
-    ssize_t readCount;
 
     fd_set set;
     int rv;
@@ -109,19 +124,19 @@ bool Web::Web::readReceive(string *bufferString) {
         rv = select(_socket + 1, &set, NULL, NULL, &timeout);
         if(rv == -1) {
             LERROR << "An error occurred within select";
-            readCount = -1;
+            _bytesRead = -1;
         } else if (rv == 0) {
             LWARNING << "Read timeout occurred, this should be okay and due to the fact, that the buffer size == request size";
-            readCount = 0;
+            _bytesRead = 0;
         } else {
-            readCount = read(_socket, buffer, BUFFER_SIZE);
-            LDEBUG << "Read " << readCount << " bytes";
+            _bytesRead += read(_socket, buffer, BUFFER_SIZE);
+            LDEBUG << "Read " << _bytesRead << " bytes so far in total";
             bufferString->append(buffer);
         }
-    } while (readCount == BUFFER_SIZE);
+    } while (_bytesRead == BUFFER_SIZE);
 
     LDEBUG << "Finished read";
-    if(readCount < 0)  {
+    if(_bytesRead < 0)  {
         LERROR << "Error during read!";
         return false;
     }
@@ -160,6 +175,10 @@ bool Web::Web::parseReceive(const string &bufferString, const bool skipHeader) {
             }
         }
     }
+    if(header) {
+        LERROR << "Didn't finish read of header, this will be a problem!";
+        return false;
+    }
     LDEBUG << "Finished parsing request";
     return true;
 }
@@ -189,7 +208,7 @@ bool Web::Web::parseHeaderLine(const string &headerLineString) {
 }
 
 bool Web::Web::parseBodyLine(const string &bodyLineString) {
-    LDEBUG << "Found body line: " << bodyLineString;
+    //LDEBUG << "Found body line: " << bodyLineString;
     this->body.append(bodyLineString);
     this->body.append("\n");
     return true;
@@ -206,6 +225,7 @@ vector<string> Web::split(const string &text, const char sep) {
     return tokens;
 }
 
+#ifdef QT_CORE_LIB
 QString Web::getIP() {
     QString ip;
     QList<QHostAddress> ipAddresses = QNetworkInterface::allAddresses();
@@ -225,4 +245,5 @@ QString Web::getIP() {
     }
     return ip;
 }
+#endif
 

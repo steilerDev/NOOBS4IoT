@@ -135,7 +135,7 @@ bool OSInfo::parseOS(const QMap<QString, QVariant> &os) {
     } else if (url.isEmpty()) {
         LWARNING << "Unable to find OS partition setup URL";
     } else {
-        LDEBUG << "Found OS partition setup URL" << url.toUtf8().constData();
+        LDEBUG << "Found OS partition setup URL " << url.toUtf8().constData();
         _partitionSetupScript = downloadRessource(url);
         if(_partitionSetupScript.isEmpty()) {
             LFATAL << "Unable to download OS partition setup script";
@@ -194,25 +194,29 @@ bool OSInfo::parsePartitionInfo(QString &url) {
     if(!Utility::Json::parseEntry<QVariantList>(partitionInfo, OS_PARTITIONS, &partitionInfoList, false, "OS partitions")) {
         return false;
     } else {
-        if(partitionInfoList.size() != _tarballs.size()) {
-            LFATAL << "Mismatch between number of available tarballs and OS partitions!";
+        if(partitionInfoList.size() < _tarballs.size()) {
+            LFATAL << "More tarballs specified than partitions available";
             return false;
-        } else {
-            PartitionInfo *partInfo;
-            int i = 0;
-            foreach(QVariant partition, partitionInfoList) {
-                if(partition.canConvert<QVariantMap>()) {
-                    partInfo = new PartitionInfo(partition.toMap(), _tarballs[i++]);
-                    if(partInfo->isValid()) {
-                        _partitions.append(partInfo);
-                    } else {
-                        LFATAL << "Invalid partition info found";
-                        return false;
-                    }
+        } else if(partitionInfoList.size() > _tarballs.size()) {
+            LERROR << "More partitions specified than tarballs, this might be intentional, filling gap with empty partitions";
+            for (int i = partitionInfoList.size() - _tarballs.size(); i > 0; i--) {
+                _tarballs.append("");
+            }
+        }
+        PartitionInfo *partInfo;
+        int i = 0;
+        foreach(QVariant partition, partitionInfoList) {
+            if(partition.canConvert<QVariantMap>()) {
+                partInfo = new PartitionInfo(partition.toMap(), _tarballs[i++]);
+                if(partInfo->isValid()) {
+                    _partitions.append(partInfo);
                 } else {
-                    LFATAL << "Unable to parse partition due to type error";
+                    LFATAL << "Invalid partition info found";
                     return false;
                 }
+            } else {
+                LFATAL << "Unable to parse partition due to type error";
+                return false;
             }
         }
     }
