@@ -8,12 +8,12 @@ This project uses [EasyLogging++ (v8.91) by Majid Khan (c) 2017 muflihun.com](ht
 
 1. Insert an SD card that is 4GB or greater in size into your computer.
 2. Format the SD card using the platform-specific instructions below:
-  1. Windows
-    1. Download the SD Association's Formatting Tool from https://www.sdcard.org/downloads/formatter_4/eula_windows/
-    2. Install and run the Formatting Tool on your machine
-    3. Set "FORMAT SIZE ADJUSTMENT" option to "ON" in the "Options" menu
-    4. Check that the SD card you inserted matches the one selected by the Tool
-    5. Click the "Format" button
+    1. Windows
+        1. Download the SD Association's Formatting Tool from https://www.sdcard.org/downloads/formatter_4/eula_windows/
+        2. Install and run the Formatting Tool on your machine
+        3. Set "FORMAT SIZE ADJUSTMENT" option to "ON" in the "Options" menu
+        4. Check that the SD card you inserted matches the one selected by the Tool
+        5. Click the "Format" button
   2. Mac
     1. Download the SD Association's Formatting Tool from https://www.sdcard.org/downloads/formatter_4/eula_mac/
     2. Install and run the Formatting Tool on your machine
