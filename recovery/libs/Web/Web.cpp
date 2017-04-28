@@ -75,7 +75,9 @@ bool Web::Web::send() {
     if(header.find("Content-Length") != header.end() && std::stoi(header["Content-Length"]) > _bytesRead) {
         messageSize = std::stoi(header["Content-Length"]);
         // Removing last \n
-        this->body.pop_back();
+        if(!this->body.empty()) {
+            this->body.pop_back();
+        }
         LDEBUG << "Complete message not yet read (" << _bytesRead << " vs. " << messageSize << "), continuing read";
         continueRead = true;
     }
@@ -110,11 +112,13 @@ bool Web::Web::readReceive(string *bufferString) {
     // Add our socket to the set
     FD_SET(_socket, &set);
 
+    ssize_t thisRoundRead = 0;
     do {
         // Redefine timeout struct, since it is consumed by select
         struct timeval timeout;
-        timeout.tv_sec = 2;
+        timeout.tv_sec = 1;
         timeout.tv_usec = 0;
+        thisRoundRead = 0;
 
         // Clear the buffer every time
         memset(buffer, 0, BUFFER_SIZE);
@@ -124,19 +128,20 @@ bool Web::Web::readReceive(string *bufferString) {
         rv = select(_socket + 1, &set, NULL, NULL, &timeout);
         if(rv == -1) {
             LERROR << "An error occurred within select";
-            _bytesRead = -1;
+            thisRoundRead = -1;
         } else if (rv == 0) {
             LWARNING << "Read timeout occurred, this should be okay and due to the fact, that the buffer size == request size";
-            _bytesRead = 0;
+            thisRoundRead = 0;
         } else {
-            _bytesRead += read(_socket, buffer, BUFFER_SIZE);
-            LDEBUG << "Read " << _bytesRead << " bytes so far in total";
+            thisRoundRead += read(_socket, buffer, BUFFER_SIZE);
+            LDEBUG << "Read " << thisRoundRead << " bytes this round";
             bufferString->append(buffer);
         }
-    } while (_bytesRead == BUFFER_SIZE);
+        _bytesRead += thisRoundRead;
+    } while (thisRoundRead > 0);
 
     LDEBUG << "Finished read";
-    if(_bytesRead < 0)  {
+    if(thisRoundRead < 0)  {
         LERROR << "Error during read!";
         return false;
     }

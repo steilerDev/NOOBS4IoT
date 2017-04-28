@@ -498,9 +498,8 @@ bool InstallManager::writeImage(OSInfo &image) {
             LDEBUG << "Waiting to start the script";
             proc.waitForStarted();
             LDEBUG << "Script started";
-            proc.waitForReadyRead(10000);
             while(proc.state() != QProcess::NotRunning) {
-                if(!proc.waitForReadyRead(10000)) {
+                if(proc.waitForReadyRead(10000)) {
                     LDEBUG << proc.readAll().constData();
                 }
             }

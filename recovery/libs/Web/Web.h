@@ -45,7 +45,7 @@ namespace Web {
         string body;
 
     protected:
-        Web(int socket): _socket(socket) {};
+        Web(int socket): body(), _socket(socket) {};
 
         /*
          * Fills header and body member attribute;
