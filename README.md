@@ -5,7 +5,7 @@ This hard fork of [NOOBS (c) 2013, Raspberry Pi All rights reserved](https://git
 
 # Wiki
 
-A detailed documentation about the behaviour, [usage](https://github.com/steilerDev/NOOBS4IoT/wiki/REST-API), [installation](https://github.com/steilerDev/NOOBS4IoT/wiki/Installation) and [additional information](https://github.com/steilerDev/NOOBS4IoT/wiki) can be found in the [Github Wiki](https://github.com/steilerDev/NOOBS4IoT/wiki).
+A detailed documentation about the [behaviour](https://github.com/steilerDev/NOOBS4IoT/wiki/High-Level-Architecture-and-Control-Flow), [usage](https://github.com/steilerDev/NOOBS4IoT/wiki/REST-API), [installation](https://github.com/steilerDev/NOOBS4IoT/wiki/Installation) and [additional information](https://github.com/steilerDev/NOOBS4IoT/wiki) can be found in the [Github Wiki](https://github.com/steilerDev/NOOBS4IoT/wiki).
 
 # Legal
 
