@@ -2,7 +2,7 @@
 
 This hard fork of [NOOBS (c) 2013, Raspberry Pi All rights reserved](https://github.com/raspberrypi/noobs) ([forked on 6th of September 2016](https://github.com/steilerDev/TOSCA4IoT_RPi/commit/7854f404d7653233f0d4c4d729ceed1e10ab9e88)) is intended to allow the usage of Raspberry Pi's in the context of remote provisioning. This project is part of the TOSCA project at the [Institute for the architecture of application systems (IAAS) at the University of Stuttgart](http://www.iaas.uni-stuttgart.de/).
 
-This project uses [EasyLogging++ (v8.91) by Majid Khan (c) 2017 muflihun.com](https://github.com/mkhan3189/EasyLoggingPP) licensed under a MIT license and [QR Code generator library (C++) by Project Nayuki](https://www.nayuki.io/page/qr-code-generator-library) licensed under a MIT license.
+A full list of all third party libraries, frameworks and participant can be found [in the wiki](https://github.com/steilerDev/NOOBS4IoT/wiki/Acknowledgement)
 
 # Installation
 
@@ -27,18 +27,7 @@ This project uses [EasyLogging++ (v8.91) by Majid Khan (c) 2017 muflihun.com](ht
 4. Copy the extracted files onto the SD card that you just formatted so that this file is at the root directory of the SD card. Please note that in some cases it may extract the files into a folder, if this is the case then please copy across the files from inside the folder rather than the folder itself.
 5. Insert the SD card into your Pi and connect the power supply.
 
-# Rebuild NOOBS4IoT
-Note that this will require a minimum of 6GB free disk space.
-
-Build debendencies on Ubuntu:
-`sudo apt-get install build-essential rsync texinfo libncurses-dev whois unzip bc qt4-linguist-tools`
-
-Run Build Script
-`./BUILDME.sh`
-
-Buildroot will then build the software and all dependencies, putting the result in the output directory. Buildroot by default compiles multiple files in parallel, depending on the number of CPU cores you have. The files in the `output` directory need to be put onto the SDCard (as described [above with all prerequisits](#Installation)).
-
-If your build machine has some QT5 components, it is useful to export `QT_SELECT=4` before building to ensure the QT4 component versions are selected.
+Please check out [the wiki](https://github.com/steilerDev/NOOBS4IoT/wiki/Installation) for more information.
 
 # Usage
 
